@@ -15,8 +15,7 @@
     | contains the "web" middleware group. Now create something great!
     |
     */
-//Route::middleware(['auth'])->group(function () {
-
+Route::middleware(['auth'])->group(function () {
     Route::name('users.')->prefix('users')->group(function () {
         Route::get('restore/{id}', [UsersController::class,'restore'])->name('restore');
         Route::get('datatables', [UsersController::class, 'dataForDatatables'])->name('datatables');
@@ -39,5 +38,5 @@
             Route::get('export', [PermissionsController   ::class, 'export'])->name('export');
         });
     });
-//});
+});
 
