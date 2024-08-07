@@ -1,0 +1,30 @@
+{
+    "name": "putrakuningan/usermanagement",
+    "description": "",
+    "authors": [
+        {
+            "name": "Nicolas Widart",
+            "email": "n.widart@gmail.com"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [
+            ],
+            "aliases": {
+            }
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\Usermanagement\\": "app/",
+            "Modules\\Usermanagement\\Database\\Factories\\": "database/factories/",
+            "Modules\\Usermanagement\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\Usermanagement\\Tests\\": "tests/"
+        }
+    }
+}
