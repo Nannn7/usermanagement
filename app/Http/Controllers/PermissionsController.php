@@ -281,14 +281,17 @@
             $totalRecords = $query->count();
 
             // Apply pagination if provided
-            if ($request->has('start') && $request->has('length')) {
-                $start  = $request->get('start');
-                $length = $request->get('length');
-                $query->skip($start)->take($length);
+            if ($request->has('page') && $request->has('size')) {
+                $page   = $request->get('page');
+                $size   = $request->get('size');
+                $offset = ($page - 1) * $size; // Calculate the offset
+
+                $query->skip($offset)->take($size);
             }
 
             // Get the filtered count of records
             $filteredRecords = $query->count();
+
 
             // Get the data for the current page
             $permissions = $query->get();
@@ -301,7 +304,7 @@
             });
 
             // Calculate the page count
-            $pageCount = ceil($totalRecords);
+            $pageCount = ceil($totalRecords/$request->get('size'));
 
             // Calculate the current page number
             $currentPage = 0 + 1;

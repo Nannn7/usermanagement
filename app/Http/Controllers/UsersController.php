@@ -78,11 +78,13 @@
                 });
             }
 
-            // Apply sorting if provided
-            if ($request->has('sortOrder') && !empty($request->get('sortOrder'))) {
-                $order  = $request->get('sortOrder');
-                $column = $request->get('sortField');
-                $query->orderBy($column, $order);
+            // Apply pagination if provided
+            if ($request->has('page') && $request->has('size')) {
+                $page   = $request->get('page');
+                $size   = $request->get('size');
+                $offset = ($page - 1) * $size; // Calculate the offset
+
+                $query->skip($offset)->take($size);
             }
 
             // Get the total count of records
@@ -102,7 +104,7 @@
             $users = $query->get();
 
             // Calculate the page count
-            $pageCount = ceil($totalRecords);
+            $pageCount = ceil($totalRecords/$request->get('size'));
 
             // Calculate the current page number
             $currentPage = 0 + 1;
