@@ -45,13 +45,18 @@
         {
             $permission = Permission::where('permission_group_id', $group->id)->first();
 
-            $data  = [];
-            $roles = Role::all();
+            $data = [];
+            if ($permission) {
 
-            foreach ($roles as $role) {
-                if ($role->hasPermissionTo($permission->name)) {
-                    array_push($data, $role);
+                $roles = Role::all();
+
+                foreach ($roles as $role) {
+                    if ($role->hasPermissionTo($permission->name)) {
+                        array_push($data, $role);
+                    }
                 }
+            } else {
+                $data = Role::all();
             }
 
             return $data;

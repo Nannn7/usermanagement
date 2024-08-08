@@ -32,3 +32,19 @@
         $trail->parent('users.roles');
         $trail->push('Edit Role');
     });
+
+
+    Breadcrumbs::for('users.permissions', function (BreadcrumbTrail $trail) {
+        $trail->parent('users');
+        $trail->push('Permissions', route('users.permissions.index'));
+    });
+
+    Breadcrumbs::for('users.permissions.create', function (BreadcrumbTrail $trail) {
+        $trail->parent('users.permissions');
+        $trail->push('Add Permission', route('users.permissions.create'));
+    });
+
+    Breadcrumbs::for('users.permissions.edit', function (BreadcrumbTrail $trail) {
+        $trail->parent('users.permissions');
+        $trail->push('Edit Permission');
+    });

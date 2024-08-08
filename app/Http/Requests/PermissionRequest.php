@@ -3,9 +3,9 @@
     namespace Modules\Usermanagement\Http\Requests;
 
     use Illuminate\Foundation\Http\FormRequest;
-    use Illuminate\Support\Facades\Hash;
+    use Illuminate\Support\Str;
 
-    class RoleRequest extends FormRequest
+    class PermissionRequest extends FormRequest
     {
         public function authorize()
         {
@@ -22,13 +22,13 @@
         {
 
             $rules = [
-                'guard_names' => 'required|string|in:web,api',
+                'slug'        => 'required|string|max:255',
             ];
 
             if ($this->method() === 'PUT') {
-                $rules['name'] = 'required|string|max:255|unique:roles,name,' . $this->id;
+                $rules['name'] = 'required|string|max:255|unique:permission_groups,name,' . $this->id;
             } else {
-                $rules['name'] = 'required|string|max:255|unique:roles,name';
+                $rules['name'] = 'required|string|max:255|unique:permission_groups';
             }
 
             return $rules;
@@ -37,7 +37,7 @@
         public function prepareForValidation()
         {
             $this->merge([
-                'guard_names' => 'web',
+                'slug' => Str::slug($this->input('name')),
             ]);
         }
     }

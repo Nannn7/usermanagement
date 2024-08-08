@@ -31,12 +31,12 @@ Route::middleware(['auth'])->group(function () {
         });
         Route::resource('roles', RolesController::class);
 
-        Route::resource('permissions', PermissionsController::class);
         Route::name('permissions.')->prefix('permissions')->group(function () {
             Route::get('restore/{id}', [PermissionsController::class,'restore'])->name('restore');
             Route::get('datatables', [PermissionsController::class, 'dataForDatatables'])->name('datatables');
             Route::get('export', [PermissionsController   ::class, 'export'])->name('export');
         });
+        Route::resource('permissions', PermissionsController::class);
     });
 });
 

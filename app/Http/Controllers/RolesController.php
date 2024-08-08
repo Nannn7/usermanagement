@@ -190,7 +190,7 @@
             $role->delete();
 
             // Redirect back to the roles index with a success message
-            echo json_encode(['message' => 'User deleted successfully.', 'success' => true]);
+            echo json_encode(['message' => 'Role deleted successfully.', 'success' => true]);
         }
 
         /**
