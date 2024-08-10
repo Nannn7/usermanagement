@@ -73,7 +73,7 @@
                     ];
 
                     foreach ($data as $permission) {
-                        Permission::create(['name' => $permission,'guard_name' => 'web', 'group_id' => $group->id]);
+                        Permission::create(['name' => $permission,'guard_name' => 'web', 'permission_group_id' => $group->id]);
                     }
 
                     return redirect()->route('users.permissions.index')->with('success', 'Permission created successfully.');

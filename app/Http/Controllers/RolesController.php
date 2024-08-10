@@ -8,6 +8,8 @@
     use Maatwebsite\Excel\Facades\Excel;
     use Modules\Usermanagement\Exports\RolesExport;
     use Modules\Usermanagement\Http\Requests\RoleRequest;
+    use Modules\Usermanagement\Models\Permission;
+    use Modules\Usermanagement\Models\PermissionGroup;
     use Modules\Usermanagement\Models\Role;
 
     /**
@@ -72,11 +74,31 @@
                 //abort(403, 'Sorry! You are not allowed to store roles.');
             }
 
-            // Create a new role using the provided request data
-            Role::create($request->all());
+            $validated = $request->validated();
 
-            // Redirect back to the roles index with a success message
-            return redirect()->route('users.roles.index')->with('success', 'Role created successfully.');
+            if($validated){
+                try{
+                    // If no errors, save the role to the database
+                    $role = Role::create($validated);
+
+                    $permissions = $request->input('permissions');
+                    $permissions = Permission::whereIn('id', $permissions)->pluck('name')->toArray();
+                    if (!empty($permissions)) {
+                        $role = Role::find($role->id);
+                        try{
+                            $role->syncPermissions($permissions);
+                        } catch (\Exception $e) {
+                            echo json_encode(['message' => $e->getMessage(), 'success']);exit;
+                        }
+                    }
+
+                    // Redirect back to the roles index with a success message
+                    return redirect()->route('users.roles.index')->with('success', 'Role created successfully.');
+                } catch (\Exception $e) {
+                    // Redirect back to the roles index with an error message
+                    return redirect()->route('users.roles.index')->with('error', 'Failed to create role. Please try again.');
+                }
+            }
         }
 
         /**
@@ -92,8 +114,9 @@
                 //abort(403, 'Sorry! You are not allowed to create roles.');
             }
 
+            $permissiongroups = PermissionGroup::all();
             // Return the view for creating a new role
-            return view('usermanagement::roles.create');
+            return view('usermanagement::roles.create',compact('permissiongroups'));
         }
 
         /**
@@ -113,6 +136,8 @@
 
             // Fetch the specified role from the database
             $role = Role::find($id);
+
+
 
             // Return the view for displaying the role
             return view('usermanagement::roles.show', compact('role'));
@@ -135,9 +160,10 @@
 
             // Fetch the specified role from the database
             $role = Role::find($id);
-
+            $permissions = Permission::all();
+            $permissiongroups = PermissionGroup::all();
             // Return the view for editing the role
-            return view('usermanagement::roles.create', compact('role'));
+            return view('usermanagement::roles.create', compact('role','permissions','permissiongroups'));
         }
 
 
@@ -158,14 +184,32 @@
                 //abort(403, 'Sorry! You are not allowed to update roles.');
             }
 
-            // Fetch the specified role from the database
-            $role = Role::find($id);
+            $validated = $request->validated();
+            if($validated){
+                try{
+                    // If no errors, update the role in the database
+                    $role = Role::find($id);
+                    $role->update($request->all());
 
-            // Update the role using the provided request data
-            $role->update($request->all());
+                    $permissions = $request->input('permissions');
+                    $permissions = Permission::whereIn('id', $permissions)->pluck('name')->toArray();
+                    if (!empty($permissions)) {
+                        $role = Role::find($role->id);
+                        try{
+                            $role->syncPermissions($permissions);
+                        } catch (\Exception $e) {
+                            echo json_encode(['message' => $e->getMessage(), 'success']);exit;
+                        }
 
-            // Redirect back to the roles index with a success message
-            return redirect()->route('users.roles.index')->with('success', 'Role updated successfully.');
+                    }
+
+                    // Redirect back to the roles index with a success message
+                    return redirect()->route('users.roles.index')->with('success', 'Role updated successfully.');
+                } catch (\Exception $e) {
+                    // Redirect back to the roles index with an error message
+                    return redirect()->route('users.roles.index')->with('error', 'Failed to update role. Please try again.');
+                }
+            }
         }
 
         /**

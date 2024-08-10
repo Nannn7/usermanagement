@@ -47,7 +47,6 @@
 
             $data = [];
             if ($permission) {
-
                 $roles = Role::all();
 
                 foreach ($roles as $role) {
