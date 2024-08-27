@@ -20,7 +20,7 @@
                 "classes": "",
                 "attributes": [],
                 "permission": "",
-                "roles": [],
+                "roles": ["Administrator"],
                 "sub": [
                     {
                         "title": "Users",

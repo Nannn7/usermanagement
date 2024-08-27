@@ -5,6 +5,7 @@
     use Illuminate\Database\Eloquent\SoftDeletes;
     use Illuminate\Foundation\Auth\User as Authenticatable;
     use Illuminate\Notifications\Notifiable;
+    use Modules\Lpj\Models\Branch;
     use Spatie\Permission\Traits\HasRoles;
     use Wildside\Userstamps\Userstamps;
 
@@ -38,6 +39,11 @@
             'name',
             'email',
             'password',
+            'nik',
+            'branch_id',
+            'profile_photo_path',
+            'last_login_at',
+            'last_login_ip',
         ];
 
         /**
@@ -68,6 +74,10 @@
                 'password'          => 'hashed',
                 'id'                => 'string',
             ];
+        }
+
+        public function branch(){
+            return $this->belongsTo(Branch::class);
         }
     }
 

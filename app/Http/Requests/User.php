@@ -20,13 +20,15 @@
         public function rules()
         : array
         {
-
             $rules = [
-                'name' => 'required|string|max:255',
+                'name'               => 'required|string|max:255',
+                'nik'                => 'nullable|string|max:6|unique:users,nik',
+                'branch_id'          => 'nullable|exists:branches,id',
+                'profile_photo_path' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             ];
 
             if ($this->password || $this->method() === 'POST') {
-                $rules['email'] = 'required|email|unique:users,email';
+                $rules['email']    = 'required|email|unique:users,email';
                 $rules['password'] = 'required|string|min:8|confirmed';
             }
 
@@ -40,7 +42,7 @@
         public function passedValidation()
         {
             $this->merge([
-                'password' => Hash::make($this->password)
+                'password' => Hash::make($this->password),
             ]);
         }
     }

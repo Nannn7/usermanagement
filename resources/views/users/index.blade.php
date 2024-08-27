@@ -64,6 +64,14 @@
                                     <span class="sort"> <span class="sort-label"> Email </span>
                                         <span class="sort-icon"> </span> </span>
                                 </th>
+                                <th class="min-w-[185px]" data-datatable-column="nik">
+                                    <span class="sort"> <span class="sort-label"> NIK </span>
+                                        <span class="sort-icon"> </span> </span>
+                                </th>
+                                <th class="min-w-[185px]" data-datatable-column="branch">
+                                    <span class="sort"> <span class="sort-label"> Branch </span>
+                                        <span class="sort-icon"> </span> </span>
+                                </th>
                                 <th class="min-w-[50px] text-center" data-datatable-column="actions">Action</th>
                             </tr>
                             </thead>
@@ -144,6 +152,15 @@
                 },
                 email: {
                     title: 'Email',
+                },
+                nik: {
+                    title: 'NIK',
+                },
+                branch: {
+                    title: 'Branch',
+                    render: (item, data) => {
+                        return data.branch.name;
+                    },
                 },
                 actions: {
                     title: 'Status',

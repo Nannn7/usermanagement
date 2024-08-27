@@ -54,6 +54,43 @@
                     </div>
                     <div class="flex items-baseline flex-wrap lg:flex-nowrap gap-2.5">
                         <label class="form-label max-w-56">
+                            NIK
+                        </label>
+                        <div class="flex flex-wrap items-baseline w-full">
+                            <input class="w-full input @error('nik') border-danger @enderror" type="number" name="nik" value="{{ $user->nik ?? '' }}">
+                            @error('nik')
+                            <em class="alert text-danger text-sm">{{ $message }}</em>
+                            @enderror
+                        </div>
+                    </div>
+                    <div class="flex items-baseline flex-wrap lg:flex-nowrap gap-2.5">
+                        <label class="form-label max-w-56">
+                            Branch
+                        </label>
+                        <div class="flex flex-wrap items-baseline w-full">
+                            <select class="input tomselect w-full @error('branch_id') border-danger @enderror" name="branch_id" id="branch_id">
+                                <option value="">Pilih Branch</option>
+                                @if(isset($branches))
+                                    @foreach($branches as $row)
+                                        @if(isset($user))
+                                            <option value="{{ $row->id }}" {{ isset($user->branch_id) && $user->branch_id == $row->id?'selected' : '' }}>
+                                                {{ $row->name }}
+                                            </option>
+                                        @else
+                                            <option value="{{ $row->id }}">
+                                                {{ $row->name }}
+                                            </option>
+                                        @endif
+                                    @endforeach
+                                @endif
+                            </select>
+                            @error('branch_id')
+                            <em class="alert text-danger text-sm">{{ $message }}</em>
+                            @enderror
+                        </div>
+                    </div>
+                    <div class="flex items-baseline flex-wrap lg:flex-nowrap gap-2.5">
+                        <label class="form-label max-w-56">
                             Password
                         </label>
 

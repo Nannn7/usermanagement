@@ -20,6 +20,8 @@ class UsersExport implements WithColumnFormatting, WithHeadings, FromCollection,
             $row->id,
             $row->name,
             $row->email,
+            $row->nik,
+            $row->branch->name,
             $row->created_at
         ];
     }
@@ -28,6 +30,8 @@ class UsersExport implements WithColumnFormatting, WithHeadings, FromCollection,
             'ID',
             'Name',
             'Email',
+            'NIK',
+            'Branch',
             'Created At'
         ];
     }
@@ -35,7 +39,7 @@ class UsersExport implements WithColumnFormatting, WithHeadings, FromCollection,
     public function columnFormats(): array{
         return [
             'A' => \PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_NUMBER,
-            'C' => \PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_DATE_DATETIME
+            'F' => \PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_DATE_DATETIME
         ];
     }
 }

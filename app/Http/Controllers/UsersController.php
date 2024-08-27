@@ -5,6 +5,7 @@
     use App\Http\Controllers\Controller;
     use Illuminate\Http\Request;
     use Maatwebsite\Excel\Facades\Excel;
+    use Modules\Lpj\Models\Branch;
     use Modules\Usermanagement\Exports\UsersExport;
     use Modules\Usermanagement\Http\Requests\User as UserRequest;
     use Modules\Usermanagement\Models\Role;
@@ -73,8 +74,9 @@
             if ($request->has('search') && !empty($request->get('search'))) {
                 $search = $request->get('search');
                 $query->where(function ($q) use ($search) {
-                    $q->where('name', 'LIKE', "%$search%")
-                      ->orWhere('email', 'LIKE', "%$search%");
+                    $q
+                        ->where('name', 'LIKE', "%$search%")
+                        ->orWhere('email', 'LIKE', "%$search%");
                 });
             }
 
@@ -101,10 +103,10 @@
             $filteredRecords = $query->count();
 
             // Get the data for the current page
-            $users = $query->get();
+            $users = $query->with('branch')->get();
 
             // Calculate the page count
-            $pageCount = ceil($totalRecords/$request->get('size'));
+            $pageCount = ceil($totalRecords / $request->get('size'));
 
             // Calculate the current page number
             $currentPage = 0 + 1;
@@ -135,9 +137,10 @@
                 //abort(403, 'Sorry! You are not allowed to edit users.');
             }
 
-            $user  = User::find($id);
-            $roles = Role::all();
-            return view('usermanagement::users.create', compact('user', 'roles'));
+            $user     = User::find($id);
+            $roles    = Role::all();
+            $branches = Branch::all();
+            return view('usermanagement::users.create', compact('user', 'roles', 'branches'));
         }
 
         /**
@@ -239,8 +242,9 @@
                 //abort(403, 'Sorry! You are not allowed to create a user.');
             }
 
-            $roles = Role::all();
-            return view('usermanagement::users.create', compact('roles'));
+            $roles    = Role::all();
+            $branches = Branch::all();
+            return view('usermanagement::users.create', compact('roles', 'branches'));
         }
 
         public function export()
