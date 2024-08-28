@@ -22,18 +22,20 @@
         {
             $rules = [
                 'name'               => 'required|string|max:255',
-                'nik'                => 'nullable|string|max:6|unique:users,nik',
                 'branch_id'          => 'nullable|exists:branches,id',
                 'profile_photo_path' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             ];
 
-            if ($this->password || $this->method() === 'POST') {
-                $rules['email']    = 'required|email|unique:users,email';
+            if ($this->password) {
                 $rules['password'] = 'required|string|min:8|confirmed';
             }
 
             if ($this->method() === 'PUT') {
                 $rules['email'] = 'required|email|unique:users,email,' . $this->id;
+                $rules['nik']   = 'nullable|string|max:6|unique:users,nik,' . $this->id;
+            } else {
+                $rules['email'] = 'required|email|unique:users,email';
+                $rules['nik']   = 'nullable|string|max:6|unique:users,nik';
             }
 
             return $rules;
@@ -41,9 +43,11 @@
 
         public function passedValidation()
         {
-            $this->merge([
-                'password' => Hash::make($this->password),
-            ]);
+            if ($this->password!=='') {
+                $this->merge([
+                    'password' => Hash::make($this->password),
+                ]);
+            }
         }
     }
 

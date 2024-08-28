@@ -159,7 +159,7 @@
                                                         </div>
                                                     </div>
                                                     <div class="switch switch-sm">
-                                                        <input {{ in_array($role->name,Auth()->user()->roles->pluck('name')->toArray()) ? 'checked' : '' }} name="roles" type="radio" value="{{ $role->id }}">
+                                                        <input {{ in_array($role->name,Auth()->user()->roles->pluck('name')->toArray()) ? 'checked' : '' }} name="roles" type="radio" value="{{ $role->name }}">
                                                     </div>
                                                 </div>
                                             @endforeach
