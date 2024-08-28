@@ -161,6 +161,11 @@
             $user = User::find($id);
             $user->update($request->all());
 
+            if ($request->roles) {
+                $user->roles()->detach();
+                $user->assignRole($request->roles);
+            }
+
             return redirect()->route('users.index')->with('success', 'User updated successfully.');
         }
 
@@ -223,6 +228,10 @@
                 $user = User::create($validated);
 
                 if ($user) {
+                    if ($request->roles) {
+                        $user->assignRole($request->roles);
+                    }
+
                     return redirect()->route('users.index')->with('success', 'User created successfully.');
                 }
             }
