@@ -3,7 +3,9 @@
     namespace Modules\Usermanagement\Http\Controllers;
 
     use App\Http\Controllers\Controller;
+    use Exception;
     use Illuminate\Http\Request;
+    use Illuminate\Support\Facades\Auth;
     use Maatwebsite\Excel\Facades\Excel;
     use Modules\Lpj\Models\Branch;
     use Modules\Usermanagement\Exports\UsersExport;
@@ -158,12 +160,31 @@
                 //abort(403, 'Sorry! You are not allowed to update users.');
             }
 
-            $user = User::find($id);
-            $user->update($request->all());
+            $validated = $request->validated();
 
-            if ($request->roles) {
-                $user->roles()->detach();
-                $user->assignRole($request->roles);
+            if($validated) {
+                try{
+                    $user = User::find($id);
+                    if ($request->hasFile('sign')) {
+                        $sign     = $request->file('sign');
+
+                        $signName = time() . '.' . $sign->getClientOriginalExtension();
+
+                        $sign->storeAs(
+                            'public/signatures/' . $user->id . '/',
+                            $signName,
+                        );
+
+                        $validated['sign'] = $signName;
+                    }
+                    $user->update($validated);
+                    if ($request->roles) {
+                        $user->roles()->detach();
+                        $user->assignRole($request->roles);
+                    }
+                } catch (Exception $e) {
+                    return redirect()->back()->withErrors(['error' => 'Failed to update user. Please try again.']);
+                }
             }
 
             return redirect()->route('users.index')->with('success', 'User updated successfully.');
@@ -226,7 +247,6 @@
 
             if ($validated) {
                 $user = User::create($validated);
-
                 if ($user) {
                     if ($request->roles) {
                         $user->assignRole($request->roles);
@@ -259,6 +279,12 @@
         public function export()
         {
             return Excel::download(new UsersExport, 'users.xlsx');
+        }
+
+        public function profile()
+        {
+            $user = Auth::user();
+            return view('usermanagement::users.profile', compact('user'));
         }
 
     }

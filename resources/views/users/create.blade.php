@@ -7,7 +7,7 @@
 @section('content')
     <div class="w-full grid gap-5 lg:gap-7.5 mx-auto">
         @if(isset($user->id))
-            <form action="{{ route('users.update', $user->id) }}" method="POST">
+            <form action="{{ route('users.update', $user->id) }}" method="POST" enctype="multipart/form-data">
                 <input type="hidden" name="id" value="{{ $user->id }}">
                 @method('PUT')
                 @else
@@ -89,6 +89,16 @@
                                         @enderror
                                     </div>
                                 </div>
+                                @if(isset($user->id))
+                                <div class="flex items-baseline flex-wrap lg:flex-nowrap gap-2.5">
+                                    <label class="form-label max-w-56">
+                                       E-Sign
+                                    </label>
+                                    <div class="flex flex-wrap items-baseline w-full">
+                                        <input class="file-input" type="file" name="sign" value="">
+                                    </div>
+                                </div>
+                                @endif
                                 <div class="flex items-baseline flex-wrap lg:flex-nowrap gap-2.5">
                                     <label class="form-label max-w-56">
                                         Password

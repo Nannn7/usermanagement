@@ -24,9 +24,10 @@
                 'name'               => 'required|string|max:255',
                 'branch_id'          => 'nullable|exists:branches,id',
                 'profile_photo_path' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+                'sign'               => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             ];
 
-            if ($this->password) {
+            if ($this->password !==null) {
                 $rules['password'] = 'required|string|min:8|confirmed';
             }
 
@@ -43,7 +44,7 @@
 
         public function passedValidation()
         {
-            if ($this->password!=='') {
+            if ($this->password !== null) {
                 $this->merge([
                     'password' => Hash::make($this->password),
                 ]);

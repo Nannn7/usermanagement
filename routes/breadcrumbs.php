@@ -8,6 +8,11 @@
         $trail->push('Users', route('users.index'));
     });
 
+    Breadcrumbs::for('users.profile', function (BreadcrumbTrail $trail) {
+        $trail->parent('users');
+        $trail->push('Profile');
+    });
+
     Breadcrumbs::for('users.create', function (BreadcrumbTrail $trail) {
         $trail->parent('users');
         $trail->push('Add User', route('users.create'));

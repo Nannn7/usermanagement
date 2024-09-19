@@ -20,6 +20,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('restore/{id}', [UsersController::class,'restore'])->name('restore');
         Route::get('datatables', [UsersController::class, 'dataForDatatables'])->name('datatables');
         Route::get('export', [UsersController::class, 'export'])->name('export');
+        Route::get('profile', [UsersController::class, 'profile'])->name('profile');
     });
     Route::resource('users', UsersController::class);
 
