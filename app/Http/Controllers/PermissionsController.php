@@ -65,9 +65,10 @@
                     $group_name = strtolower($validate['name']);
                     $data       = [
                         $group_name . '.create',
-                        $group_name . '.view',
+                        $group_name . '.read',
                         $group_name . '.update',
                         $group_name . '.delete',
+                        $group_name . '.export',
                         $group_name . '.authorize',
                         $group_name . '.report'
                     ];
@@ -170,6 +171,7 @@
                             $group_name . '.read',
                             $group_name . '.update',
                             $group_name . '.delete',
+                            $group_name . '.export',
                             $group_name . '.authorize',
                             $group_name . '.report'
                         ];
