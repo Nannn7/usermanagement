@@ -11,6 +11,11 @@ class UsermanagementDatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // $this->call([]);
+        $this->call([
+            PermissionGroupSeeder::class,
+            RolesSeeder::class,
+            PermissionsSeeder::class,
+            UsersSeeder::class,
+        ]);
     }
 }
