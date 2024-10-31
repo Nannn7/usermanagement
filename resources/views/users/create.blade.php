@@ -169,7 +169,11 @@
                                                         </div>
                                                     </div>
                                                     <div class="switch switch-sm">
+                                                        @if(isset($user))
                                                         <input {{ in_array($role->name,$user->roles->pluck("name")->toArray()) ? 'checked' : '' }} name="roles" type="radio" value="{{ $role->name }}">
+                                                        @else
+                                                            <input name="roles" type="radio" value="{{ $role->name }}">
+                                                        @endif
                                                     </div>
                                                 </div>
                                             @endforeach
