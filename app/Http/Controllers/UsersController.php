@@ -82,6 +82,16 @@
                 });
             }
 
+            // Apply sorting if provided
+            if ($request->has('sortOrder') && !empty($request->get('sortOrder'))) {
+                $order  = $request->get('sortOrder');
+                $column = $request->get('sortField');
+                $query->orderBy($column, $order);
+            }
+
+            // Get the total count of records
+            $totalRecords = $query->count();
+
             // Apply pagination if provided
             if ($request->has('page') && $request->has('size')) {
                 $page   = $request->get('page');
@@ -89,16 +99,6 @@
                 $offset = ($page - 1) * $size; // Calculate the offset
 
                 $query->skip($offset)->take($size);
-            }
-
-            // Get the total count of records
-            $totalRecords = $query->count();
-
-            // Apply pagination if provided
-            if ($request->has('start') && $request->has('length')) {
-                $start  = $request->get('start');
-                $length = $request->get('length');
-                $query->skip($start)->take($length);
             }
 
             // Get the filtered count of records
