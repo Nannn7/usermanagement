@@ -72,6 +72,10 @@
                                     <span class="sort"> <span class="sort-label"> Branch </span>
                                         <span class="sort-icon"> </span> </span>
                                 </th>
+                                <th class="min-w-[185px]" data-datatable-column="role">
+                                    <span class="sort"> <span class="sort-label"> Role </span>
+                                        <span class="sort-icon"> </span> </span>
+                                </th>
                                 <th class="min-w-[50px] text-center" data-datatable-column="actions">Action</th>
                             </tr>
                             </thead>
@@ -160,6 +164,12 @@
                     title: 'Branch',
                     render: (item, data) => {
                         return data.branch.name;
+                    },
+                },
+                role: {
+                    title: 'Role',
+                    render: (item, data) => {
+                        return data.roles.map(role => role.name).join(', ');
                     },
                 },
                 actions: {

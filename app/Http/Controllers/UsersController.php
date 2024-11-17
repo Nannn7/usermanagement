@@ -105,7 +105,7 @@
             $filteredRecords = $query->count();
 
             // Get the data for the current page
-            $users = $query->with('branch')->get();
+            $users = $query->with(['branch','roles'])->get();
 
             // Calculate the page count
             $pageCount = ceil($totalRecords / $request->get('size'));
