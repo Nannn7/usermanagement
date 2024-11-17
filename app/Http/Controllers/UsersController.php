@@ -6,6 +6,8 @@
     use Exception;
     use Illuminate\Http\Request;
     use Illuminate\Support\Facades\Auth;
+    use Illuminate\Support\Facades\Hash;
+    use Illuminate\Support\Facades\Validator;
     use Maatwebsite\Excel\Facades\Excel;
     use Modules\Lpj\Models\Branch;
     use Modules\Usermanagement\Exports\UsersExport;
@@ -77,8 +79,7 @@
                 $search = $request->get('search');
                 $query->where(function ($q) use ($search) {
                     $q
-                        ->where('name', 'LIKE', "%$search%")
-                        ->orWhere('email', 'LIKE', "%$search%");
+                        ->where('name', 'LIKE', "%$search%")->orWhere('email', 'LIKE', "%$search%");
                 });
             }
 
@@ -105,7 +106,7 @@
             $filteredRecords = $query->count();
 
             // Get the data for the current page
-            $users = $query->with(['branch','roles'])->get();
+            $users = $query->with(['branch', 'roles'])->get();
 
             // Calculate the page count
             $pageCount = ceil($totalRecords / $request->get('size'));
@@ -143,51 +144,6 @@
             $roles    = Role::all();
             $branches = Branch::all();
             return view('usermanagement::users.create', compact('user', 'roles', 'branches'));
-        }
-
-        /**
-         * Update the specified resource in storage.
-         *
-         * @param \Modules\Usermanagement\Http\Requests\User $request
-         * @param int                                        $id
-         *
-         * @return \Illuminate\Http\RedirectResponse
-         * @throws \Illuminate\Auth\Access\AuthorizationException
-         */
-        public function update(UserRequest $request, $id)
-        {
-            if (is_null($this->user) || !$this->user->can('users.update')) {
-                //abort(403, 'Sorry! You are not allowed to update users.');
-            }
-
-            $validated = $request->validated();
-
-            if($validated) {
-                try{
-                    $user = User::find($id);
-                    if ($request->hasFile('sign')) {
-                        $sign     = $request->file('sign');
-
-                        $signName = time() . '.' . $sign->getClientOriginalExtension();
-
-                        $sign->storeAs(
-                            'public/signatures/' . $user->id . '/',
-                            $signName,
-                        );
-
-                        $validated['sign'] = $signName;
-                    }
-                    $user->update($validated);
-                    if ($request->roles) {
-                        $user->roles()->detach();
-                        $user->assignRole($request->roles);
-                    }
-                } catch (Exception $e) {
-                    return redirect()->back()->withErrors(['error' => 'Failed to update user. Please try again.']);
-                }
-            }
-
-            return redirect()->route('users.index')->with('success', 'User updated successfully.');
         }
 
         /**
@@ -285,6 +241,108 @@
         {
             $user = Auth::user();
             return view('usermanagement::users.profile', compact('user'));
+        }
+
+        public function updateProfile(Request $request)
+        {
+            $user = Auth::user();
+
+            $validatedData = $request->validate([
+                'name'  => 'required|string|max:255',
+                'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
+                'nik'   => 'required|string|max:255|unique:users,nik,' . $user->id,
+                'sign'  => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            ]);
+
+            $user->name  = $validatedData['name'];
+            $user->email = $validatedData['email'];
+            $user->nik   = $validatedData['nik'];
+
+            if ($request->hasFile('sign')) {
+                // Delete old e-sign if exists
+                if ($user->sign) {
+                    Storage::delete('public/signatures/' . $user->id . '/' . $user->sign);
+                }
+
+                $sign     = $request->file('sign');
+                $signName = time() . '.' . $sign->getClientOriginalExtension();
+                $sign->storeAs('public/signatures/' . $user->id, $signName);
+                $user->sign = $signName;
+            }
+
+            $user->save();
+
+            return redirect()->route('users.profile')->with('success', 'Profile updated successfully.');
+        }
+
+        public function changePassword(Request $request)
+        {
+            $validator = Validator::make($request->all(), [
+                'current_password' => 'required',
+                'password'         => 'required|string|min:8|confirmed',
+            ], [
+                'password_confirmation' => 'The new password confirmation does not match.',
+            ]);
+
+            if ($validator->fails()) {
+                return back()->withErrors($validator)->withInput();
+            }
+
+            $user = Auth::user();
+
+            if (!Hash::check($request->current_password, $user->password)) {
+                return back()->withErrors(['current_password' => 'The current password is incorrect.']);
+            }
+
+            $user->password = Hash::make($request->password);
+            $user->save();
+
+            return redirect()->route('users.profile')->with('success', 'Password changed successfully.');
+        }
+
+        /**
+         * Update the specified resource in storage.
+         *
+         * @param \Modules\Usermanagement\Http\Requests\User $request
+         * @param int                                        $id
+         *
+         * @return \Illuminate\Http\RedirectResponse
+         * @throws \Illuminate\Auth\Access\AuthorizationException
+         */
+        public function update(UserRequest $request, $id)
+        {
+            if (is_null($this->user) || !$this->user->can('users.update')) {
+                //abort(403, 'Sorry! You are not allowed to update users.');
+            }
+
+            $validated = $request->validated();
+
+            if ($validated) {
+                try {
+                    $user = User::find($id);
+                    if ($request->hasFile('sign')) {
+                        $sign = $request->file('sign');
+
+                        $signName = time() . '.' . $sign->getClientOriginalExtension();
+
+                        $sign->storeAs(
+                            'public/signatures/' . $user->id . '/',
+                            $signName,
+                        );
+
+                        $validated['sign'] = $signName;
+                    }
+                    $user->update($validated);
+                    if ($request->roles) {
+                        $user->roles()->detach();
+                        $user->assignRole($request->roles);
+                    }
+                } catch (Exception $e) {
+                    return redirect()->back()->withErrors(['error' => 'Failed to update user. Please try again.']);
+                }
+            }
+
+            return redirect()->route('users.index')->with('success', 'User updated successfully.');
         }
 
     }

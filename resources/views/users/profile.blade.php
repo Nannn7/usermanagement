@@ -59,6 +59,101 @@
             </div>
             <!-- End of Container -->
         </div>
+
+        <div class="container-fluid mt-8 w-full">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Edit Profile Form -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Edit Profile</h3>
+                    </div>
+                    <div class="card-body">
+                        <form action="{{ route('users.update-profile') }}" method="POST" enctype="multipart/form-data">
+                            @csrf
+                            @method('PUT')
+                            <div class="mb-4">
+                                <label for="name" class="form-label">Name</label>
+                                <input type="text" class="input @error('name') border-danger @enderror" id="name" name="name" value="{{ Auth::user()->name }}">
+
+                                @error('name')
+                                <div class="text-danger mt-2">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="mb-4">
+                                <label for="email" class="form-label">Email</label>
+                                <input type="email" class="input @error('email') border-danger @enderror" id="email" name="email" value="{{ Auth::user()->email }}">
+
+                                @error('email')
+                                <div class="text-danger mt-2">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="mb-4">
+                                <label for="nik" class="form-label">NIK</label>
+                                <input type="text" class="input @error('nik') border-danger @enderror" id="nik" name="nik" value="{{ Auth::user()->nik }}">
+
+                                @error('nik')
+                                <div class="text-danger mt-2">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="sign" class="form-label">E-Sign</label>
+                                <input type="file" class="file-input @error('sign') border-danger @enderror" id="sign" name="sign" accept="image/*">
+                                @if(Auth::user()->sign)
+                                    <div class="mt-2">
+                                        <p>Current E-Sign:</p>
+                                        <img src="{{ asset('storage/signatures/' . Auth::user()->id . '/' . Auth::user()->sign) }}"
+                                             alt="E-Sign"
+                                             class="mt-2 max-w-xs border border-gray-200 rounded">
+                                    </div>
+                                @endif
+
+                                @error('sign')
+                                <div class="text-danger mt-2">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <button type="submit" class="btn btn-primary">Update Profile</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Change Password Form -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Change Password</h3>
+                    </div>
+                    <div class="card-body">
+                        <form action="{{ route('users.change-password') }}" method="POST">
+                            @csrf
+                            @method('PUT')
+                            <div class="mb-4">
+                                <label for="current_password" class="form-label">Current Password</label>
+                                <input type="password" class="input @error('current_password') border-danger @enderror" id="current_password" name="current_password">
+                                @error('current_password')
+                                <div class="text-danger mt-2">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="mb-4">
+                                <label for="password" class="form-label">New Password</label>
+                                <input type="password" class="input @error('password') border-danger @enderror" id="password" name="password">
+                                @error('password')
+                                <div class="text-danger mt-2">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <div class="mb-4">
+                                <label for="password_confirmation" class="form-label">Confirm New Password</label>
+                                <input type="password" class="input @error('password_confirmation') border-danger @enderror" id="password_confirmation" name="password_confirmation">
+                                @error('password_confirmation')
+                                <div class="text-danger mt-2">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <button type="submit" class="btn btn-primary">Change Password</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 @endsection
 
