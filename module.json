@@ -16,7 +16,7 @@
       {
         "title": "User Management",
         "path": "users",
-        "icon": "ki-filled ki-users text-lg",
+        "icon": "ki-filled ki-users text-lg text-primary",
         "classes": "",
         "attributes": [],
         "permission": "",
