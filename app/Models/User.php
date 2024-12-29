@@ -5,7 +5,7 @@
     use Illuminate\Database\Eloquent\SoftDeletes;
     use Illuminate\Foundation\Auth\User as Authenticatable;
     use Illuminate\Notifications\Notifiable;
-    use Modules\Lpj\Models\Branch;
+    use Modules\Basicdata\Models\Branch;
     use Spatie\Permission\Traits\HasRoles;
     use Wildside\Userstamps\Userstamps;
 
