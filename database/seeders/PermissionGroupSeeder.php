@@ -29,12 +29,7 @@
         {
             return [
                 ['name' => 'usermanagement'],
-                ['name' => 'basic-data'],
-                ['name' => 'permohonan'],
-                ['name' => 'admin'],
-                ['name' => 'senior-officer'],
-                ['name' => 'penilai'],
-                ['name' => 'surveyor']
+                ['name' => 'basic-data']
             ];
         }
     }
