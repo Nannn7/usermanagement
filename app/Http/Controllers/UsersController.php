@@ -79,7 +79,8 @@
                 $search = $request->get('search');
                 $query->where(function ($q) use ($search) {
                     $q
-                        ->where('name', 'LIKE', "%$search%")->orWhere('email', 'LIKE', "%$search%");
+                        ->whereRaw('LOWER(name) LIKE ?', ['%' . strtolower($search) . '%'])
+                        ->orWhereRaw('LOWER(email) LIKE ?', ['%' . strtolower($search) . '%']);
                 });
             }
 

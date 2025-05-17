@@ -2,6 +2,7 @@
 
     namespace Modules\Usermanagement\Models;
 
+    use Illuminate\Database\Eloquent\Factories\HasFactory;
     use Illuminate\Database\Eloquent\SoftDeletes;
     use Illuminate\Foundation\Auth\User as Authenticatable;
     use Illuminate\Notifications\Notifiable;
@@ -24,7 +25,7 @@
      */
     class User extends Authenticatable
     {
-        use Notifiable, Userstamps, HasRoles, softDeletes;
+        use HasFactory, Notifiable, Userstamps, HasRoles, softDeletes;
 
         protected $guard_name = ['web'];
 
@@ -80,5 +81,14 @@
         public function branch(){
             return $this->belongsTo(Branch::class);
         }
-    }
 
+        /**
+         * Create a new factory instance for the model.
+         *
+         * @return \Illuminate\Database\Eloquent\Factories\Factory
+         */
+        protected static function newFactory()
+        {
+            return \Modules\Usermanagement\Database\Factories\UserFactory::new();
+        }
+    }
