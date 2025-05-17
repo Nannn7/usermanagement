@@ -2,6 +2,7 @@
 
     use Illuminate\Support\Facades\Route;
     use Modules\Usermanagement\Http\Controllers\PermissionsController;
+    use Modules\Usermanagement\Http\Controllers\PositionsController;
     use Modules\Usermanagement\Http\Controllers\RolesController;
     use Modules\Usermanagement\Http\Controllers\UsersController;
 
@@ -43,6 +44,11 @@
                 Route::get('export', [PermissionsController   ::class, 'export'])->name('export');
             });
             Route::resource('permissions', PermissionsController::class);
+
+            Route::name('positions.')->prefix('positions')->group(function () {
+                Route::get('datatables', [PositionsController::class, 'dataForDatatables'])->name('datatables');
+                Route::get('export', [PositionsController::class, 'export'])->name('export');
+            });
+            Route::resource('positions', PositionsController::class);
         });
     });
-

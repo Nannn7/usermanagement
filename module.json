@@ -1,61 +1,71 @@
 {
-  "name": "Usermanagement",
-  "alias": "usermanagement",
-  "database": "",
-  "description": "",
-  "keywords": [],
-  "priority": 0,
-  "providers": [
-    "Modules\\Usermanagement\\Providers\\UsermanagementServiceProvider"
-  ],
-  "files": [],
-  "menu": {
-    "main": [],
-    "master": [],
-    "system": [
-      {
-        "title": "User Management",
-        "path": "users",
-        "icon": "ki-filled ki-users text-lg text-primary",
-        "classes": "",
-        "attributes": [],
-        "permission": "",
-        "roles": [
-          "administrator"
-        ],
-        "sub": [
-          {
-            "title": "Users",
-            "path": "users",
-            "classes": "",
-            "attributes": [],
-            "permission": "",
-            "roles": [
-              "administrator"
-            ]
-          },
-          {
-            "title": "Roles",
-            "path": "users.roles",
-            "classes": "",
-            "attributes": [],
-            "permission": "",
-            "roles": [
-              "administrator"
-            ]
-          },
-          {
-            "title": "Permissions",
-            "path": "users.permissions",
-            "classes": "",
-            "attributes": [],
-            "permission": "",
-            "roles": [
-              "administrator"
-            ]
-          }
+    "name": "Usermanagement",
+    "alias": "usermanagement",
+    "database": "",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Usermanagement\\Providers\\UsermanagementServiceProvider"
+    ],
+    "files": [],
+    "menu": {
+        "main": [],
+        "master": [],
+        "system": [
+            {
+                "title": "User Management",
+                "path": "users",
+                "icon": "ki-filled ki-users text-lg text-primary",
+                "classes": "",
+                "attributes": [],
+                "permission": "",
+                "roles": [
+                    "administrator"
+                ],
+                "sub": [
+                    {
+                        "title": "Users",
+                        "path": "users",
+                        "classes": "",
+                        "attributes": [],
+                        "permission": "",
+                        "roles": [
+                            "administrator"
+                        ]
+                    },
+                    {
+                        "title": "Positions",
+                        "path": "users.positions",
+                        "classes": "",
+                        "attributes": [],
+                        "permission": "",
+                        "roles": [
+                            "administrator"
+                        ]
+                    },
+                    {
+                        "title": "Roles",
+                        "path": "users.roles",
+                        "classes": "",
+                        "attributes": [],
+                        "permission": "",
+                        "roles": [
+                            "administrator"
+                        ]
+                    },
+                    {
+                        "title": "Permissions",
+                        "path": "users.permissions",
+                        "classes": "",
+                        "attributes": [],
+                        "permission": "",
+                        "roles": [
+                            "administrator"
+                        ]
+                    }
+                ]
+            }
         ]
-      }
-    ]
-  }
+    }
 }

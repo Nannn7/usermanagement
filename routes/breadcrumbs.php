@@ -53,3 +53,18 @@
         $trail->parent('users.permissions');
         $trail->push('Edit Permission');
     });
+
+    Breadcrumbs::for('users.positions', function (BreadcrumbTrail $trail) {
+        $trail->parent('users');
+        $trail->push('Positions', route('users.positions.index'));
+    });
+
+    Breadcrumbs::for('users.positions.create', function (BreadcrumbTrail $trail) {
+        $trail->parent('users.positions');
+        $trail->push('Add Position', route('users.positions.create'));
+    });
+
+    Breadcrumbs::for('users.positions.edit', function (BreadcrumbTrail $trail) {
+        $trail->parent('users.positions');
+        $trail->push('Edit Position');
+    });
