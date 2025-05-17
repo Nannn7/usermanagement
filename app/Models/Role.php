@@ -12,6 +12,17 @@
         use softDeletes, LogsActivity;
 
         /**
+         * The attributes that are mass assignable.
+         *
+         * @var array
+         */
+        protected $fillable = [
+            'name',
+            'guard_name',
+            'position_id',
+        ];
+
+        /**
          * Retrieve the activity log options for this role.
          *
          * @return LogOptions The activity log options.
@@ -22,4 +33,11 @@
             return LogOptions::defaults()->logAll()->useLogName('User Management|Roles : ');
         }
 
+        /**
+         * Get the position that owns the role.
+         */
+        public function position()
+        {
+            return $this->belongsTo(Position::class);
+        }
     }

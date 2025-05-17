@@ -10,6 +10,7 @@
     use Modules\Usermanagement\Http\Requests\RoleRequest;
     use Modules\Usermanagement\Models\Permission;
     use Modules\Usermanagement\Models\PermissionGroup;
+    use Modules\Usermanagement\Models\Position;
     use Modules\Usermanagement\Models\Role;
 
     /**
@@ -48,7 +49,7 @@
         public function index()
         {
             // Check if the authenticated user has the required permission to view roles
-            if (is_null($this->user) || !$this->user->can('roles.view')) {
+            if (is_null($this->user) || !$this->user->can('roles.read')) {
                 //abort(403, 'Sorry! You are not allowed to view roles.');
             }
 
@@ -70,7 +71,7 @@
         public function store(RoleRequest $request)
         {
             // Check if the authenticated user has the required permission to store roles
-            if (is_null($this->user) || !$this->user->can('roles.store')) {
+            if (is_null($this->user) || !$this->user->can('roles.create')) {
                 //abort(403, 'Sorry! You are not allowed to store roles.');
             }
 
@@ -115,8 +116,9 @@
             }
 
             $permissiongroups = PermissionGroup::all();
+            $positions = Position::all();
             // Return the view for creating a new role
-            return view('usermanagement::roles.create',compact('permissiongroups'));
+            return view('usermanagement::roles.create', compact('permissiongroups', 'positions'));
         }
 
         /**
@@ -130,7 +132,7 @@
         public function show($id)
         {
             // Check if the authenticated user has the required permission to view roles
-            if (is_null($this->user) || !$this->user->can('roles.view')) {
+            if (is_null($this->user) || !$this->user->can('roles.read')) {
                 abort(403, 'Sorry! You are not allowed to view roles.');
             }
 
@@ -154,7 +156,7 @@
         public function edit($id)
         {
             // Check if the authenticated user has the required permission to edit roles
-            if (is_null($this->user) || !$this->user->can('roles.edit')) {
+            if (is_null($this->user) || !$this->user->can('roles.update')) {
                 //abort(403, 'Sorry! You are not allowed to edit roles.');
             }
 
@@ -162,8 +164,9 @@
             $role = Role::find($id);
             $permissions = Permission::all();
             $permissiongroups = PermissionGroup::all();
+            $positions = Position::all();
             // Return the view for editing the role
-            return view('usermanagement::roles.create', compact('role','permissions','permissiongroups'));
+            return view('usermanagement::roles.create', compact('role', 'permissions', 'permissiongroups', 'positions'));
         }
 
 
@@ -272,7 +275,7 @@
          */
         public function dataForDatatables(Request $request)
         {
-            if (is_null($this->user) || !$this->user->can('roles.view')) {
+            if (is_null($this->user) || !$this->user->can('roles.read')) {
                 //abort(403, 'Sorry! You are not allowed to view users.');
             }
 
@@ -283,7 +286,7 @@
             if ($request->has('search') && !empty($request->get('search'))) {
                 $search = $request->get('search');
                 $query->where(function ($q) use ($search) {
-                    $q->where('name', 'LIKE', "%$search%");
+                    $q->whereRaw('LOWER(name) LIKE ?', ['%' . strtolower($search) . '%']);
                 });
             }
 

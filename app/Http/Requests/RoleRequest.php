@@ -23,6 +23,7 @@
 
             $rules = [
                 'guard_names' => 'required|string|in:web,api',
+                'position_id' => 'nullable|exists:positions,id',
             ];
 
             if ($this->method() === 'PUT') {
@@ -41,6 +42,3 @@
             ]);
         }
     }
-
-
-
