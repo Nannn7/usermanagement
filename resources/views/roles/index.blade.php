@@ -19,29 +19,7 @@
 
                             </label>
                         </div>
-                        <div class="flex flex-wrap gap-2.5">
-                            <select class="select select-sm w-28">
-                                <option value="1">
-                                    Active
-                                </option>
-                                <option value="2">
-                                    Disabled
-                                </option>
-                                <option value="2">
-                                    Pending
-                                </option>
-                            </select>
-                            <select class="select select-sm w-28">
-                                <option value="desc">
-                                    Latest
-                                </option>
-                                <option value="asc">
-                                    Oldest
-                                </option>
-                            </select>
-                            <button class="btn btn-sm btn-outline btn-primary">
-                                <i class="ki-filled ki-setting-4"> </i> <Filters></Filters>
-                            </button>
+                        <div class="flex flex-wrap gap-2.5 lg:gap-5">
                             <div class="h-[24px] border border-r-gray-200"> </div>
                             <a class="btn btn-sm btn-light" href="{{ route('users.roles.export') }}"> Export to Excel </a>
                             <a class="btn btn-sm btn-primary" href="{{ route('users.roles.create') }}"> Add Role </a>
@@ -58,6 +36,14 @@
                                 </th>
                                 <th class="min-w-[250px]" data-datatable-column="name">
                                     <span class="sort"> <span class="sort-label"> Role </span>
+                                        <span class="sort-icon"> </span> </span>
+                                </th>
+                                <th class="min-w-[200px]" data-datatable-column="position_name">
+                                    <span class="sort"> <span class="sort-label"> Position </span>
+                                        <span class="sort-icon"> </span> </span>
+                                </th>
+                                <th class="min-w-[100px]" data-datatable-column="level">
+                                    <span class="sort"> <span class="sort-label"> Tingkat Jabatan </span>
                                         <span class="sort-icon"> </span> </span>
                                 </th>
                                 <th class="min-w-[50px] text-center" data-datatable-column="actions">Action</th>
@@ -138,6 +124,20 @@
                 name: {
                     title: 'Role',
                 },
+                position_name: {
+                    title: 'Position',
+                    render: (item, data) => {
+                        return data.position ? data.position.name : '-';
+                    },
+                    sortable: true,
+                },
+                level: {
+                    title: 'Level',
+                    render: (item, data) => {
+                        return data.position ? data.position.level : '-';
+                    },
+                    sortable: true,
+                },
                 actions: {
                     title: 'Status',
                     render: (item, data) => {
@@ -162,4 +162,3 @@
         });
     </script>
 @endpush
-

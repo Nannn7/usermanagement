@@ -38,11 +38,11 @@
                             Position
                         </label>
                         <div class="flex flex-wrap items-baseline w-full">
-                            <select class="select @error('position_id') border-danger @enderror" name="position_id">
+                            <select class="select tomselect @error('position_id') border-danger @enderror" name="position_id">
                                 <option value="">Select Position</option>
                                 @foreach($positions as $position)
                                     <option value="{{ $position->id }}" {{ (isset($role) && $role->position_id == $position->id) ? 'selected' : '' }}>
-                                        {{ $position->name }} (Level: {{ $position->level }})
+                                        {{ $position->name }} | Tingkat Jabatan: {{ $position->level }}
                                     </option>
                                 @endforeach
                             </select>

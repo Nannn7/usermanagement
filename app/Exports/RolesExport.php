@@ -11,13 +11,15 @@ use Modules\Usermanagement\Models\Role;
 class RolesExport implements WithColumnFormatting, WithHeadings, FromCollection, withMapping
 {
     public function collection(){
-        return Role::all();
+        return Role::with('position')->get();
     }
 
     public function map($row): array{
         return [
             $row->id,
             $row->name,
+            $row->position ? $row->position->name : '-',
+            $row->position ? $row->position->level : '-',
             $row->created_at
         ];
     }
@@ -25,6 +27,8 @@ class RolesExport implements WithColumnFormatting, WithHeadings, FromCollection,
         return [
             'ID',
             'Role',
+            'Position',
+            'Tingkat Jabatan',
             'Created At'
         ];
     }
@@ -32,7 +36,8 @@ class RolesExport implements WithColumnFormatting, WithHeadings, FromCollection,
     public function columnFormats(): array{
         return [
             'A' => \PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_NUMBER,
-            'C' => \PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_DATE_DATETIME
+            'D' => \PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_NUMBER,
+            'E' => \PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_DATE_DATETIME
         ];
     }
 }

@@ -286,7 +286,11 @@
             if ($request->has('search') && !empty($request->get('search'))) {
                 $search = $request->get('search');
                 $query->where(function ($q) use ($search) {
-                    $q->whereRaw('LOWER(name) LIKE ?', ['%' . strtolower($search) . '%']);
+                    $q->whereRaw('LOWER(name) LIKE ?', ['%' . strtolower($search) . '%'])
+                      ->orWhereHas('position', function($query) use ($search) {
+                          $query->whereRaw('LOWER(name) LIKE ?', ['%' . strtolower($search) . '%'])
+                                ->orWhereRaw('CAST(level AS TEXT) LIKE ?', ['%' . $search . '%']);
+                      });
                 });
             }
 
@@ -294,11 +298,26 @@
             if ($request->has('sortOrder') && !empty($request->get('sortOrder'))) {
                 $order  = $request->get('sortOrder');
                 $column = $request->get('sortField');
-                $query->orderBy($column, $order);
+
+                // Handle sorting for position-related columns
+                if ($column === 'position_name') {
+                    $query->leftJoin('positions', 'roles.position_id', '=', 'positions.id')
+                          ->orderBy('positions.name', $order)
+                          ->select('roles.*'); // Select only from roles table to avoid column conflicts
+                } else if ($column === 'level') {
+                    $query->leftJoin('positions', 'roles.position_id', '=', 'positions.id')
+                          ->orderBy('positions.level', $order)
+                          ->select('roles.*'); // Select only from roles table to avoid column conflicts
+                } else {
+                    $query->orderBy($column, $order);
+                }
             }
 
-            // Get the total count of records
-            $totalRecords = $query->count();
+            // Create a copy of the query for counting
+            $countQuery = clone $query;
+
+            // Get the total count of records (without joins to avoid duplicates)
+            $totalRecords = Role::count();
 
             // Apply pagination if provided
             if ($request->has('page') && $request->has('size')) {
@@ -309,11 +328,11 @@
                 $query->skip($offset)->take($size);
             }
 
-            // Get the filtered count of records
-            $filteredRecords = $query->count();
+            // Get the filtered count of records - use distinct to avoid duplicates from joins
+            $filteredRecords = $countQuery->distinct()->count('roles.id');
 
             // Get the data for the current page
-            $roles = $query->get();
+            $roles = $query->with('position')->get();
 
             // Calculate the page count
             $pageCount = ceil($totalRecords/$request->get('size'));
