@@ -26,19 +26,6 @@
         public $user;
 
         /**
-         * PositionsController constructor.
-         *
-         * Initializes the user property with the authenticated user.
-         */
-        /*public function __construct()
-        {
-            $this->middleware(function ($request, $next) {
-                $this->user = Auth::guard('web')->user();
-                return $next($request);
-            });
-        }*/
-
-        /**
          * Display a listing of the resource.
          *
          * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
@@ -49,7 +36,7 @@
             $user = Auth::guard('web')->user();
 
             // Check if the authenticated user has the required permission to view positions
-            if (is_null($user) || !$user->can('positions.read')) {
+            if (is_null($user) || !$user->can('usermanagement.read')) {
                 abort(403, 'Sorry! You are not allowed to view positions.');
             }
 
@@ -73,7 +60,7 @@
             $user = Auth::guard('web')->user();
 
             // Check if the authenticated user has the required permission to store positions
-            if (is_null($user) || !$user->can('positions.create')) {
+            if (is_null($user) || !$user->can('usermanagement.create')) {
                 abort(403, 'Sorry! You are not allowed to store positions.');
             }
 
@@ -106,36 +93,12 @@
             $user = Auth::guard('web')->user();
 
             // Check if the authenticated user has the required permission to create positions
-            if (is_null($user) || !$user->can('positions.create')) {
+            if (is_null($user) || !$user->can('usermanagement.create')) {
                 abort(403, 'Sorry! You are not allowed to create positions.');
             }
 
             // Return the view for creating a new position
             return view('usermanagement::positions.create');
-        }
-
-        /**
-         * Display the specified resource.
-         *
-         * @param int $id
-         *
-         * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
-         */
-        public function show($id)
-        {
-            // Get the authenticated user
-            $user = Auth::guard('web')->user();
-
-            // Check if the authenticated user has the required permission to view positions
-            if (is_null($user) || !$user->can('positions.read')) {
-                abort(403, 'Sorry! You are not allowed to view positions.');
-            }
-
-            // Find the position by ID
-            $position = Position::findOrFail($id);
-
-            // Return the view for displaying the position
-            return view('usermanagement::positions.show', compact('position'));
         }
 
         /**
@@ -151,7 +114,7 @@
             $user = Auth::guard('web')->user();
 
             // Check if the authenticated user has the required permission to edit positions
-            if (is_null($user) || !$user->can('positions.update')) {
+            if (is_null($user) || !$user->can('usermanagement.update')) {
                 abort(403, 'Sorry! You are not allowed to edit positions.');
             }
 
@@ -176,7 +139,7 @@
             $user = Auth::guard('web')->user();
 
             // Check if the authenticated user has the required permission to update positions
-            if (is_null($user) || !$user->can('positions.update')) {
+            if (is_null($user) || !$user->can('usermanagement.update')) {
                 abort(403, 'Sorry! You are not allowed to update positions.');
             }
 
@@ -212,25 +175,31 @@
         {
             // Get the authenticated user
             $user = Auth::guard('web')->user();
-
+        
             // Check if the authenticated user has the required permission to delete positions
-            if (is_null($user) || !$user->can('positions.delete')) {
+            if (is_null($user) || !$user->can('usermanagement.delete')) {
                 abort(403, 'Sorry! You are not allowed to delete positions.');
             }
-
+        
             // Find the position by ID
             $position = Position::findOrFail($id);
-
+        
+            // Check if the position has associated roles
+            if ($position->roles()->count() > 0) {
+                return redirect()->route('users.positions.index')
+                                 ->with('error', 'Cannot delete position because it has associated roles.');
+            }
+        
             try {
                 // If no errors, delete the position from the database
                 $position->delete();
-
+        
                 // Redirect to the positions index page with a success message
                 return redirect()->route('users.positions.index')
                                  ->with('success', 'Position deleted successfully.');
             } catch (Exception $e) {
                 // If an error occurs, redirect back with an error message
-                return redirect()->back()
+                return redirect()->route('users.positions.index')
                                  ->with('error', 'An error occurred while deleting the position: ' . $e->getMessage());
             }
         }
@@ -248,7 +217,7 @@
             $user = Auth::guard('web')->user();
 
             // Check if the authenticated user has the required permission to view positions
-            if (is_null($user) || !$user->can('positions.read')) {
+            if (is_null($user) || !$user->can('usermanagement.read')) {
                 abort(403, 'Sorry! You are not allowed to view positions.');
             }
 
@@ -291,10 +260,11 @@
             $positions = $query->get();
 
             // Calculate the page count
-            $pageCount = ceil($totalRecords / $request->get('size'));
+            $size = $request->get('size', 10); // Default to 10 if not set
+            $pageCount = $size > 0 ? ceil($totalRecords / $size) : 0;
 
             // Calculate the current page number
-            $currentPage = 0 + 1;
+            $currentPage = $request->get('page', 1); // Default to page 1 if not set
 
             // Return the response data as a JSON object
             return response()->json([
@@ -320,7 +290,7 @@
             $user = Auth::guard('web')->user();
 
             // Check if the authenticated user has the required permission to export positions
-            if (is_null($user) || !$user->can('positions.export')) {
+            if (is_null($user) || !$user->can('usermanagement.export')) {
                 abort(403, 'Sorry! You are not allowed to export positions.');
             }
 
