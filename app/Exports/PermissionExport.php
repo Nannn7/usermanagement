@@ -21,7 +21,8 @@ class PermissionExport implements WithColumnFormatting, WithHeadings, FromCollec
     }
 
     public function map($row): array{
-        $role = $row->roles->pluck('name')->toArray();
+        // Convert the array to a collection before using pluck
+        $role = collect($row->roles)->pluck('name')->toArray();
         return [
             $row->id,
             $row->name,

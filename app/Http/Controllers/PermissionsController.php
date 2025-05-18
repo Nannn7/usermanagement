@@ -26,6 +26,16 @@
         public $user;
 
         /**
+         * UsersController constructor.
+         *
+         * Initializes the user property with the authenticated user.
+         */
+        public function __construct()
+        {
+            $this->user = Auth::guard('web')->user();
+        }
+
+        /**
          * Display a listing of the resource.
          *
          * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
@@ -34,8 +44,8 @@
         public function index()
         {
             // Check if the authenticated user has the required permission to view permissions
-            if (is_null($this->user) || !$this->user->can('permissions.view')) {
-                //abort(403, 'Sorry! You are not allowed to view permissions.');
+            if (is_null($this->user) || !$this->user->can('usermanagement.read')) {
+                abort(403, 'Sorry! You are not allowed to view permissions.');
             }
 
             // Return the view for displaying the permissions
@@ -53,8 +63,8 @@
         public function store(PermissionRequest $request)
         {
             // Check if the authenticated user has the required permission to store permissions
-            if (is_null($this->user) || !$this->user->can('permissions.store')) {
-                //abort(403, 'Sorry! You are not allowed to store permissions.');
+            if (is_null($this->user) || !$this->user->can('usermanagement.store')) {
+                abort(403, 'Sorry! You are not allowed to store permissions.');
             }
 
             $validate = $request->validated();
@@ -97,21 +107,11 @@
         public function create()
         {
             // Check if the authenticated user has the required permission to create permissions
-            if (is_null($this->user) || !$this->user->can('permissions.create')) {
-                //abort(403, 'Sorry! You are not allowed to create permissions.');
+            if (is_null($this->user) || !$this->user->can('usermanagement.create')) {
+                abort(403, 'Sorry! You are not allowed to create permissions.');
             }
 
             // Return the view for creating a new role
-            return view('usermanagement::permissions.create');
-        }
-
-        public function show($id){
-            // Check if the authenticated user has the required permission to view permissions
-            if (is_null($this->user) ||!$this->user->can('permissions.view')) {
-                //abort(403, 'Sorry! You are not allowed to view permissions.');
-            }
-
-            // Return the view for editing the role
             return view('usermanagement::permissions.create');
         }
 
@@ -126,8 +126,8 @@
         public function edit($id)
         {
             // Check if the authenticated user has the required permission to edit permissions
-            if (is_null($this->user) || !$this->user->can('permissions.edit')) {
-                //abort(403, 'Sorry! You are not allowed to edit permissions.');
+            if (is_null($this->user) || !$this->user->can('usermanagement.edit')) {
+                abort(403, 'Sorry! You are not allowed to edit permissions.');
             }
 
             $permission = PermissionGroup::find($id);
@@ -150,8 +150,8 @@
         public function update(PermissionRequest $request, $id)
         {
             // Check if the authenticated user has the required permission to update permissions
-            if (is_null($this->user) || !$this->user->can('permissions.update')) {
-                //abort(403, 'Sorry! You are not allowed to update permissions.');
+            if (is_null($this->user) || !$this->user->can('usermanagement.update')) {
+                abort(403, 'Sorry! You are not allowed to update permissions.');
             }
 
             $validated = $request->validated();
@@ -202,8 +202,8 @@
         public function destroy($id)
         {
             // Check if the authenticated user has the required permission to delete permissions
-            if (is_null($this->user) || !$this->user->can('permissions.delete')) {
-                //abort(403, 'Sorry! You are not allowed to delete permissions.');
+            if (is_null($this->user) || !$this->user->can('usermanagement.delete')) {
+                abort(403, 'Sorry! You are not allowed to delete permissions.');
             }
 
             $permission = PermissionGroup::find($id);
@@ -214,7 +214,7 @@
             }
 
             // Redirect back to the permissions index with a success message
-            echo json_encode(['message' => 'Permission deleted successfully.', 'success' => true]);
+            return response()->json(['message' => 'Permission deleted successfully.','success' => true]);
         }
 
         /**
@@ -228,7 +228,7 @@
         public function restore($id)
         {
             // Check if the authenticated user has the required permission to restore permissions
-            if (is_null($this->user) || !$this->user->can('permissions.restore')) {
+            if (is_null($this->user) || !$this->user->can('usermanagement.restore')) {
                 abort(403, 'Sorry! You are not allowed to restore permissions.');
             }
 
@@ -257,8 +257,8 @@
          */
         public function dataForDatatables(Request $request)
         {
-            if (is_null($this->user) || !$this->user->can('permissions.view')) {
-                //abort(403, 'Sorry! You are not allowed to view users.');
+            if (is_null($this->user) || !$this->user->can('usermanagement.read')) {
+                abort(403, 'Sorry! You are not allowed to view users.');
             }
 
             // Retrieve data from the database

@@ -2,13 +2,14 @@
 
     namespace Modules\Usermanagement\Models;
 
-    use Spatie\Activitylog\LogOptions;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Activitylog\LogOptions;
     use Spatie\Activitylog\Traits\LogsActivity;
     use Spatie\Permission\Models\Permission as SpatiePermission;
 
     class Permission extends SpatiePermission
     {
-        use LogsActivity;
+        use LogsActivity, SoftDeletes;
 
         /**
          * Retrieve the activity log options for this permission.

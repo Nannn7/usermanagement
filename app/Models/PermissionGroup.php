@@ -12,6 +12,17 @@
             'slug'
         ];
 
+        protected static function boot()
+        {
+            parent::boot();
+
+            static::creating(function ($model) {
+                if (!$model->slug) {
+                    $model->slug = \Str::slug($model->name);
+                }
+            });
+        }
+
         /**
          * Retrieves all permissions associated with a given permission group ID.
          *
