@@ -12,6 +12,7 @@
     use Modules\Usermanagement\Models\PermissionGroup;
     use Modules\Usermanagement\Models\Position;
     use Modules\Usermanagement\Models\Role;
+    use Exception;
 
     /**
      * Class RolesController
@@ -31,14 +32,11 @@
          * UsersController constructor.
          *
          * Initializes the user property with the authenticated user.
-         *
+         */
         public function __construct()
         {
-            $this->middleware(function ($request, $next) {
-                $this->user = Auth::guard('web')->user();
-                return $next($request);
-            });
-        }*/
+            $this->user = Auth::guard('web')->user();
+        }
 
         /**
          * Display a listing of the resource.
@@ -49,8 +47,8 @@
         public function index()
         {
             // Check if the authenticated user has the required permission to view roles
-            if (is_null($this->user) || !$this->user->can('roles.read')) {
-                //abort(403, 'Sorry! You are not allowed to view roles.');
+            if (is_null($this->user) || !$this->user->can('usermanagement.read')) {
+                abort(403, 'Sorry! You are not allowed to view roles.');
             }
 
             // Fetch all roles from the database
@@ -71,14 +69,14 @@
         public function store(RoleRequest $request)
         {
             // Check if the authenticated user has the required permission to store roles
-            if (is_null($this->user) || !$this->user->can('roles.create')) {
-                //abort(403, 'Sorry! You are not allowed to store roles.');
+            if (is_null($this->user) || !$this->user->can('usermanagement.create')) {
+                abort(403, 'Sorry! You are not allowed to store roles.');
             }
 
             $validated = $request->validated();
 
-            if($validated){
-                try{
+            if ($validated) {
+                try {
                     // If no errors, save the role to the database
                     $role = Role::create($validated);
 
@@ -86,18 +84,22 @@
                     $permissions = Permission::whereIn('id', $permissions)->pluck('name')->toArray();
                     if (!empty($permissions)) {
                         $role = Role::find($role->id);
-                        try{
+                        try {
                             $role->syncPermissions($permissions);
-                        } catch (\Exception $e) {
-                            echo json_encode(['message' => $e->getMessage(), 'success']);exit;
+                        } catch (Exception $e) {
+                            return redirect()
+                                ->route('users.roles.index')
+                                ->with('error', 'Failed to sync permissions: ' . $e->getMessage());
                         }
                     }
 
                     // Redirect back to the roles index with a success message
                     return redirect()->route('users.roles.index')->with('success', 'Role created successfully.');
-                } catch (\Exception $e) {
+                } catch (Exception $e) {
                     // Redirect back to the roles index with an error message
-                    return redirect()->route('users.roles.index')->with('error', 'Failed to create role. Please try again.');
+                    return redirect()
+                        ->route('users.roles.index')
+                        ->with('error', 'Failed to create role. Please try again.');
                 }
             }
         }
@@ -111,38 +113,14 @@
         public function create()
         {
             // Check if the authenticated user has the required permission to create roles
-            if (is_null($this->user) || !$this->user->can('roles.create')) {
-                //abort(403, 'Sorry! You are not allowed to create roles.');
+            if (is_null($this->user) || !$this->user->can('usermanagement.create')) {
+                abort(403, 'Sorry! You are not allowed to create roles.');
             }
 
             $permissiongroups = PermissionGroup::all();
-            $positions = Position::all();
+            $positions        = Position::all();
             // Return the view for creating a new role
             return view('usermanagement::roles.create', compact('permissiongroups', 'positions'));
-        }
-
-        /**
-         * Display the specified resource.
-         *
-         * @param int $id
-         *
-         * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
-         * @throws \Illuminate\Auth\Access\AuthorizationException
-         */
-        public function show($id)
-        {
-            // Check if the authenticated user has the required permission to view roles
-            if (is_null($this->user) || !$this->user->can('roles.read')) {
-                abort(403, 'Sorry! You are not allowed to view roles.');
-            }
-
-            // Fetch the specified role from the database
-            $role = Role::find($id);
-
-
-
-            // Return the view for displaying the role
-            return view('usermanagement::roles.show', compact('role'));
         }
 
         /**
@@ -156,15 +134,15 @@
         public function edit($id)
         {
             // Check if the authenticated user has the required permission to edit roles
-            if (is_null($this->user) || !$this->user->can('roles.update')) {
-                //abort(403, 'Sorry! You are not allowed to edit roles.');
+            if (is_null($this->user) || !$this->user->can('usermanagement.update')) {
+                abort(403, 'Sorry! You are not allowed to edit roles.');
             }
 
             // Fetch the specified role from the database
-            $role = Role::find($id);
-            $permissions = Permission::all();
+            $role             = Role::find($id);
+            $permissions      = Permission::all();
             $permissiongroups = PermissionGroup::all();
-            $positions = Position::all();
+            $positions        = Position::all();
             // Return the view for editing the role
             return view('usermanagement::roles.create', compact('role', 'permissions', 'permissiongroups', 'positions'));
         }
@@ -183,13 +161,13 @@
         public function update(RoleRequest $request, $id)
         {
             // Check if the authenticated user has the required permission to update roles
-            if (is_null($this->user) || !$this->user->can('roles.update')) {
-                //abort(403, 'Sorry! You are not allowed to update roles.');
+            if (is_null($this->user) || !$this->user->can('usermanagement.update')) {
+                abort(403, 'Sorry! You are not allowed to update roles.');
             }
 
             $validated = $request->validated();
-            if($validated){
-                try{
+            if ($validated) {
+                try {
                     // If no errors, update the role in the database
                     $role = Role::find($id);
                     $role->update($request->all());
@@ -198,19 +176,23 @@
                     $permissions = Permission::whereIn('id', $permissions)->pluck('name')->toArray();
                     if (!empty($permissions)) {
                         $role = Role::find($role->id);
-                        try{
+                        try {
                             $role->syncPermissions($permissions);
-                        } catch (\Exception $e) {
-                            echo json_encode(['message' => $e->getMessage(), 'success']);exit;
+                        } catch (Exception $e) {
+                            return redirect()
+                                ->route('users.roles.index')
+                                ->with('error', 'Failed to sync permissions: ' . $e->getMessage());
                         }
 
                     }
 
                     // Redirect back to the roles index with a success message
                     return redirect()->route('users.roles.index')->with('success', 'Role updated successfully.');
-                } catch (\Exception $e) {
+                } catch (Exception $e) {
                     // Redirect back to the roles index with an error message
-                    return redirect()->route('users.roles.index')->with('error', 'Failed to update role. Please try again.');
+                    return redirect()
+                        ->route('users.roles.index')
+                        ->with('error', 'Failed to update role. Please try again.');
                 }
             }
         }
@@ -223,21 +205,23 @@
          * @return \Illuminate\Http\RedirectResponse
          * @throws \Illuminate\Auth\Access\AuthorizationException
          */
+
         public function destroy($id)
         {
-            // Check if the authenticated user has the required permission to delete roles
-            if (is_null($this->user) || !$this->user->can('roles.delete')) {
-                //abort(403, 'Sorry! You are not allowed to delete roles.');
+            // Check if the authenticated user has the required permission to delete currencies
+            if (is_null($this->user) || !$this->user->can('usermanagement.delete')) {
+                return response()->json(['success' => false, 'message' => 'Sorry! You are not allowed to delete roles.'], 403);
             }
 
-            // Fetch the specified role from the database
-            $role = Role::find($id);
+            try {
+                // Delete from database
+                $currency = Role::find($id);
+                $currency->delete();
 
-            // Delete the role
-            $role->delete();
-
-            // Redirect back to the roles index with a success message
-            echo json_encode(['message' => 'Role deleted successfully.', 'success' => true]);
+                return response()->json(['success' => true, 'message' => 'Role deleted successfully.']);
+            } catch (Exception $e) {
+                return response()->json(['success' => false, 'message' => 'Failed to delete role.']);
+            }
         }
 
         /**
@@ -251,7 +235,7 @@
         public function restore($id)
         {
             // Check if the authenticated user has the required permission to restore roles
-            if (is_null($this->user) || !$this->user->can('roles.restore')) {
+            if (is_null($this->user) || !$this->user->can('usermanagement.restore')) {
                 abort(403, 'Sorry! You are not allowed to restore roles.');
             }
 
@@ -275,8 +259,8 @@
          */
         public function dataForDatatables(Request $request)
         {
-            if (is_null($this->user) || !$this->user->can('roles.read')) {
-                //abort(403, 'Sorry! You are not allowed to view users.');
+            if (is_null($this->user) || !$this->user->can('usermanagement.read')) {
+                abort(403, 'Sorry! You are not allowed to view users.');
             }
 
             // Retrieve data from the database
@@ -287,7 +271,7 @@
                 $search = $request->get('search');
                 $query->where(function ($q) use ($search) {
                     $q->whereRaw('LOWER(name) LIKE ?', ['%' . strtolower($search) . '%'])
-                      ->orWhereHas('position', function($query) use ($search) {
+                      ->orWhereHas('position', function ($query) use ($search) {
                           $query->whereRaw('LOWER(name) LIKE ?', ['%' . strtolower($search) . '%'])
                                 ->orWhereRaw('CAST(level AS TEXT) LIKE ?', ['%' . $search . '%']);
                       });
@@ -302,14 +286,19 @@
                 // Handle sorting for position-related columns
                 if ($column === 'position_name') {
                     $query->leftJoin('positions', 'roles.position_id', '=', 'positions.id')
-                          ->orderBy('positions.name', $order)
+                          ->orderByRaw('LOWER(positions.name) ' . $order)
                           ->select('roles.*'); // Select only from roles table to avoid column conflicts
                 } else if ($column === 'level') {
                     $query->leftJoin('positions', 'roles.position_id', '=', 'positions.id')
                           ->orderBy('positions.level', $order)
                           ->select('roles.*'); // Select only from roles table to avoid column conflicts
                 } else {
-                    $query->orderBy($column, $order);
+                    // Make sorting case-insensitive for string columns
+                    if ($column === 'name') {
+                        $query->orderByRaw('LOWER(roles.name) ' . $order);
+                    } else {
+                        $query->orderBy($column, $order);
+                    }
                 }
             }
 
@@ -334,11 +323,12 @@
             // Get the data for the current page
             $roles = $query->with('position')->get();
 
-            // Calculate the page count
-            $pageCount = ceil($totalRecords/$request->get('size'));
+            // Calculate the page count - ensure we don't divide by zero
+            $pageSize = $request->get('size', 10); // Default to 10 if not provided
+            $pageCount = $pageSize > 0 ? ceil($totalRecords / $pageSize) : 0;
 
             // Calculate the current page number
-            $currentPage = 0 + 1;
+            $currentPage = $request->get('page') ?: 1;
 
             // Return the response data as a JSON object
             return response()->json([
