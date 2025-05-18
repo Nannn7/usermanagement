@@ -19,29 +19,7 @@
 
                             </label>
                         </div>
-                        <div class="flex flex-wrap gap-2.5">
-                            <select class="select select-sm w-28">
-                                <option value="1">
-                                    Active
-                                </option>
-                                <option value="2">
-                                    Disabled
-                                </option>
-                                <option value="2">
-                                    Pending
-                                </option>
-                            </select>
-                            <select class="select select-sm w-28">
-                                <option value="desc">
-                                    Latest
-                                </option>
-                                <option value="asc">
-                                    Oldest
-                                </option>
-                            </select>
-                            <button class="btn btn-sm btn-outline btn-primary">
-                                <i class="ki-filled ki-setting-4"> </i> Filters
-                            </button>
+                        <div class="flex flex-wrap gap-2.5 lg:gap-5">
                             <div class="h-[24px] border border-r-gray-200"> </div>
                             <a class="btn btn-sm btn-light" href="{{ route('users.export') }}"> Export to Excel </a>
                             <a class="btn btn-sm btn-primary" href="{{ route('users.create') }}"> Add User </a>

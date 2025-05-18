@@ -14,6 +14,7 @@
     use Modules\Usermanagement\Http\Requests\User as UserRequest;
     use Modules\Usermanagement\Models\Role;
     use Modules\Usermanagement\Models\User;
+    use Illuminate\Support\Facades\Storage;
 
     /**
      * Class UsersController
@@ -24,7 +25,7 @@
      */
     class UsersController extends Controller
     {
-        /**
+         /**
          * @var \Illuminate\Contracts\Auth\Authenticatable|null
          */
         public $user;
@@ -34,13 +35,10 @@
          *
          * Initializes the user property with the authenticated user.
          */
-        //        public function __construct()
-        //        {
-        //            $this->middleware(function ($request, $next) {
-        //                $this->user = Auth::guard('web')->user();
-        //                return $next($request);
-        //            });
-        //        }
+        public function __construct()
+        {
+            $this->user = Auth::guard('web')->user();
+        }
 
         /**
          * Display a listing of the resource.
@@ -50,7 +48,7 @@
          */
         public function index()
         {
-            if (is_null($this->user) || !$this->user->can('users.view')) {
+            if (is_null($this->user) || !$this->user->can('usermanagement.read')) {
                 //abort(403, 'Sorry! You are not allowed to view users.');
             }
 
@@ -67,7 +65,7 @@
          */
         public function dataForDatatables(Request $request)
         {
-            if (is_null($this->user) || !$this->user->can('users.view')) {
+            if (is_null($this->user) || !$this->user->can('usermanagement.view')) {
                 //abort(403, 'Sorry! You are not allowed to view users.');
             }
 
@@ -137,7 +135,7 @@
          */
         public function edit($id)
         {
-            if (is_null($this->user) || !$this->user->can('users.edit')) {
+            if (is_null($this->user) || !$this->user->can('usermanagement.edit')) {
                 //abort(403, 'Sorry! You are not allowed to edit users.');
             }
 
@@ -157,14 +155,14 @@
          */
         public function destroy($id)
         {
-            if (is_null($this->user) || !$this->user->can('users.delete')) {
+            if (is_null($this->user) || !$this->user->can('usermanagement.delete')) {
                 //abort(403, 'Sorry! You are not allowed to delete users.');
             }
 
             $user = User::find($id);
             $user->delete();
 
-            echo json_encode(['message' => 'User deleted successfully.', 'success' => true]);
+            return response()->json(['message' => 'User deleted successfully.', 'success' => true]);
         }
 
         /**
@@ -177,7 +175,7 @@
          */
         public function restore($id)
         {
-            if (is_null($this->user) || !$this->user->can('users.restore')) {
+            if (is_null($this->user) || !$this->user->can('usermanagement.restore')) {
                 abort(403, 'Sorry! You are not allowed to restore users.');
             }
 
@@ -224,7 +222,7 @@
          */
         public function create()
         {
-            if (is_null($this->user) || !$this->user->can('users.create')) {
+            if (is_null($this->user) || !$this->user->can('usermanagement.create')) {
                 //abort(403, 'Sorry! You are not allowed to create a user.');
             }
 
@@ -262,12 +260,17 @@
             if ($request->hasFile('sign')) {
                 // Delete old e-sign if exists
                 if ($user->sign) {
-                    Storage::delete('public/signatures/' . $user->id . '/' . $user->sign);
+                    Storage::disk('public')->delete('signatures/' . $user->id . '/' . $user->sign);
                 }
 
                 $sign     = $request->file('sign');
                 $signName = time() . '.' . $sign->getClientOriginalExtension();
-                $sign->storeAs('public/signatures/' . $user->id, $signName);
+
+                // Make sure the directory exists
+                Storage::disk('public')->makeDirectory('signatures/' . $user->id);
+
+                // Store the file
+                $sign->storeAs('signatures/' . $user->id, $signName, 'public');
                 $user->sign = $signName;
             }
 
@@ -312,7 +315,7 @@
          */
         public function update(UserRequest $request, $id)
         {
-            if (is_null($this->user) || !$this->user->can('users.update')) {
+            if (is_null($this->user) || !$this->user->can('usermanagement.update')) {
                 //abort(403, 'Sorry! You are not allowed to update users.');
             }
 
