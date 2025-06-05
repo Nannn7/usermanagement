@@ -8,7 +8,7 @@
     use Illuminate\Notifications\Notifiable;
     use Modules\Basicdata\Models\Branch;
     use Spatie\Permission\Traits\HasRoles;
-    use Wildside\Userstamps\Userstamps;
+    use Mattiverse\Userstamps\Traits\Userstamps;
 
     /**
      * Class User
