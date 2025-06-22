@@ -53,7 +53,7 @@
         {
             $actions = [];
             // list of permission actions
-            $crud = ['create', 'read', 'update', 'delete','export', 'authorize', 'report'];
+            $crud = ['create', 'read', 'update', 'delete','export', 'authorize', 'report','restore'];
 
 
             foreach ($crud as $value) {

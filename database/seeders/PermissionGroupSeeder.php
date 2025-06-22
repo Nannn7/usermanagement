@@ -28,8 +28,7 @@
         public function data()
         {
             return [
-                ['name' => 'usermanagement'],
-                ['name' => 'basic-data']
+                ['name' => 'usermanagement']
             ];
         }
     }
