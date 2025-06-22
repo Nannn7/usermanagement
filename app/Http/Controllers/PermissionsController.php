@@ -23,7 +23,7 @@
         /**
          * @var \Illuminate\Contracts\Auth\Authenticatable|null
          */
-        public $user;
+        protected $user;
 
         /**
          * UsersController constructor.
@@ -32,7 +32,14 @@
          */
         public function __construct()
         {
-            $this->user = Auth::guard('web')->user();
+            // Mengatur middleware auth
+            $this->middleware('auth');
+
+            // Mengatur user setelah middleware auth dijalankan
+            $this->middleware(function ($request, $next) {
+                $this->user = Auth::user();
+                return $next($request);
+            });
         }
 
         /**
