@@ -8,7 +8,9 @@
     "providers": [
         "Modules\\Usermanagement\\Providers\\UsermanagementServiceProvider"
     ],
-    "files": [],
+    "files": [
+        "app/Helpers/RolePermission.php"
+    ],
     "menu": {
         "main": [],
         "master": [],
