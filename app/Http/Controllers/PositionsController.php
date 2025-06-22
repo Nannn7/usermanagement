@@ -170,7 +170,7 @@
         {
             // Check if the authenticated user has the required permission to delete positions
             if (is_null($this->user) || !$this->user->can('usermanagement.delete')) {
-                abort(403, 'Sorry! You are not allowed to delete positions.');
+                return response()->json(['message' => 'Sorry! You are not allowed to delete positions.','success' => false]);
             }
 
             // Find the position by ID
@@ -207,7 +207,7 @@
         {
             // Check if the authenticated user has the required permission to view positions
             if (is_null($this->user) || !$this->user->can('usermanagement.read')) {
-                abort(403, 'Sorry! You are not allowed to view positions.');
+                return response()->json(['message' => 'Sorry! You are not allowed to view positions.','success' => false]);
             }
 
             // Retrieve data from the database

@@ -66,7 +66,7 @@
         public function dataForDatatables(Request $request)
         {
             if (is_null($this->user) || !$this->user->can('usermanagement.view')) {
-                abort(403, 'Sorry! You are not allowed to view users.');
+                return response()->json(['message' => 'Sorry! You are not allowed to view users.','success' => false]);
             }
 
             // Retrieve data from the database
@@ -155,7 +155,7 @@
         public function destroy($id)
         {
             if (is_null($this->user) || !$this->user->can('usermanagement.delete')) {
-                abort(403, 'Sorry! You are not allowed to delete users.');
+                return response()->json(['message' => 'Sorry! You are not allowed to delete users.','success' => false]);
             }
 
             $user = User::find($id);

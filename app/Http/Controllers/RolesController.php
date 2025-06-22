@@ -260,7 +260,7 @@
         public function dataForDatatables(Request $request)
         {
             if (is_null($this->user) || !$this->user->can('usermanagement.read')) {
-                abort(403, 'Sorry! You are not allowed to view users.');
+                return response()->json(['message' => 'Sorry! You are not allowed to view roles.','success' => false]);
             }
 
             // Retrieve data from the database

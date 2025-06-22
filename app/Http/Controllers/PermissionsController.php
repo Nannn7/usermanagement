@@ -205,7 +205,7 @@
         {
             // Check if the authenticated user has the required permission to delete permissions
             if (is_null($this->user) || !$this->user->can('usermanagement.delete')) {
-                abort(403, 'Sorry! You are not allowed to delete permissions.');
+                return response()->json(['message' => 'Sorry! You are not allowed to delete permissions.','success' => false]);
             }
 
             $permission = PermissionGroup::find($id);
@@ -260,7 +260,7 @@
         public function dataForDatatables(Request $request)
         {
             if (is_null($this->user) || !$this->user->can('usermanagement.read')) {
-                abort(403, 'Sorry! You are not allowed to view users.');
+                return response()->json(['message' => 'Sorry! You are not allowed to view permissions.','success' => false]);
             }
 
             // Retrieve data from the database
