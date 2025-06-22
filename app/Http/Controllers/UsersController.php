@@ -72,7 +72,7 @@
          */
         public function dataForDatatables(Request $request)
         {
-            if (is_null($this->user) || !$this->user->can('usermanagement.view')) {
+            if (is_null($this->user) || !$this->user->can('usermanagement.read')) {
                 return response()->json(['message' => 'Sorry! You are not allowed to view users.','success' => false]);
             }
 
