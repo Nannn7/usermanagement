@@ -63,8 +63,8 @@
         public function store(PermissionRequest $request)
         {
             // Check if the authenticated user has the required permission to store permissions
-            if (is_null($this->user) || !$this->user->can('usermanagement.store')) {
-                abort(403, 'Sorry! You are not allowed to store permissions.');
+            if (is_null($this->user) || !$this->user->can('usermanagement.create')) {
+               abort(403, 'Sorry! You are not allowed to create permissions.');
             }
 
             $validate = $request->validated();
@@ -80,7 +80,8 @@
                         $group_name . '.delete',
                         $group_name . '.export',
                         $group_name . '.authorize',
-                        $group_name . '.report'
+                        $group_name . '.report',
+                        $group_name . '.restore'
                     ];
 
                     foreach ($data as $permission) {
@@ -126,7 +127,7 @@
         public function edit($id)
         {
             // Check if the authenticated user has the required permission to edit permissions
-            if (is_null($this->user) || !$this->user->can('usermanagement.edit')) {
+            if (is_null($this->user) || !$this->user->can('usermanagement.update')) {
                 abort(403, 'Sorry! You are not allowed to edit permissions.');
             }
 
@@ -173,7 +174,8 @@
                             $group_name . '.delete',
                             $group_name . '.export',
                             $group_name . '.authorize',
-                            $group_name . '.report'
+                            $group_name . '.report',
+                            $group_name . '.restore'
                         ];
 
                         $i = 0;
@@ -325,6 +327,11 @@
 
         public function export()
         {
+            // Check if the authenticated user has the required permission to export permissions
+            if (is_null($this->user) || !$this->user->can('usermanagement.export')) {
+                abort(403, 'Sorry! You are not allowed to export permissions.');
+            }
+
             return Excel::download(new PermissionExport, 'permissions.xlsx');
         }
     }

@@ -9,7 +9,7 @@
     use Illuminate\Support\Facades\Hash;
     use Illuminate\Support\Facades\Validator;
     use Maatwebsite\Excel\Facades\Excel;
-    use Modules\Lpj\Models\Branch;
+    use Modules\Basicdata\Models\Branch;
     use Modules\Usermanagement\Exports\UsersExport;
     use Modules\Usermanagement\Http\Requests\User as UserRequest;
     use Modules\Usermanagement\Models\Role;
@@ -49,7 +49,7 @@
         public function index()
         {
             if (is_null($this->user) || !$this->user->can('usermanagement.read')) {
-                //abort(403, 'Sorry! You are not allowed to view users.');
+                abort(403, 'Sorry! You are not allowed to view users.');
             }
 
             return view('usermanagement::users.index');
@@ -66,7 +66,7 @@
         public function dataForDatatables(Request $request)
         {
             if (is_null($this->user) || !$this->user->can('usermanagement.view')) {
-                //abort(403, 'Sorry! You are not allowed to view users.');
+                abort(403, 'Sorry! You are not allowed to view users.');
             }
 
             // Retrieve data from the database
@@ -76,8 +76,7 @@
             if ($request->has('search') && !empty($request->get('search'))) {
                 $search = $request->get('search');
                 $query->where(function ($q) use ($search) {
-                    $q
-                        ->whereRaw('LOWER(name) LIKE ?', ['%' . strtolower($search) . '%'])
+                    $q->whereRaw('LOWER(name) LIKE ?', ['%' . strtolower($search) . '%'])
                         ->orWhereRaw('LOWER(email) LIKE ?', ['%' . strtolower($search) . '%']);
                 });
             }
@@ -135,8 +134,8 @@
          */
         public function edit($id)
         {
-            if (is_null($this->user) || !$this->user->can('usermanagement.edit')) {
-                //abort(403, 'Sorry! You are not allowed to edit users.');
+            if (is_null($this->user) || !$this->user->can('usermanagement.update')) {
+                abort(403, 'Sorry! You are not allowed to edit users.');
             }
 
             $user     = User::find($id);
@@ -156,7 +155,7 @@
         public function destroy($id)
         {
             if (is_null($this->user) || !$this->user->can('usermanagement.delete')) {
-                //abort(403, 'Sorry! You are not allowed to delete users.');
+                abort(403, 'Sorry! You are not allowed to delete users.');
             }
 
             $user = User::find($id);
@@ -198,6 +197,10 @@
          */
         public function store(UserRequest $request)
         {
+            if (is_null($this->user) || !$this->user->can('usermanagement.create')) {
+                abort(403, 'Sorry! You are not allowed to create a user.');
+            }
+
             $validated = $request->validated();
 
             if ($validated) {
@@ -223,7 +226,7 @@
         public function create()
         {
             if (is_null($this->user) || !$this->user->can('usermanagement.create')) {
-                //abort(403, 'Sorry! You are not allowed to create a user.');
+                abort(403, 'Sorry! You are not allowed to create a user.');
             }
 
             $roles    = Role::all();
@@ -233,6 +236,10 @@
 
         public function export()
         {
+            if (is_null($this->user) || !$this->user->can('usermanagement.export')) {
+                abort(403, 'Sorry! You are not allowed to export users.');
+            }
+
             return Excel::download(new UsersExport, 'users.xlsx');
         }
 
@@ -316,7 +323,7 @@
         public function update(UserRequest $request, $id)
         {
             if (is_null($this->user) || !$this->user->can('usermanagement.update')) {
-                //abort(403, 'Sorry! You are not allowed to update users.');
+                abort(403, 'Sorry! You are not allowed to update users.');
             }
 
             $validated = $request->validated();

@@ -344,6 +344,10 @@
 
         public function export()
         {
+            if (is_null($this->user) || !$this->user->can('usermanagement.export')) {
+                abort(403, 'Sorry! You are not allowed to export roles.');
+            }
+
             return Excel::download(new RolesExport, 'roles.xlsx');
         }
     }

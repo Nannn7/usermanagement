@@ -23,7 +23,17 @@
         /**
          * @var \Illuminate\Contracts\Auth\Authenticatable|null
          */
-        public $user;
+        public $this->user;
+
+        /**
+         * UsersController constructor.
+         *
+         * Initializes the user property with the authenticated user.
+         */
+        public function __construct()
+        {
+            $this->user = Auth::guard('web')->user();
+        }
 
         /**
          * Display a listing of the resource.
@@ -32,11 +42,8 @@
          */
         public function index()
         {
-            // Get the authenticated user
-            $user = Auth::guard('web')->user();
-
             // Check if the authenticated user has the required permission to view positions
-            if (is_null($user) || !$user->can('usermanagement.read')) {
+            if (is_null($this->user) || !$this->user->can('usermanagement.read')) {
                 abort(403, 'Sorry! You are not allowed to view positions.');
             }
 
@@ -56,12 +63,9 @@
          */
         public function store(PositionRequest $request)
         {
-            // Get the authenticated user
-            $user = Auth::guard('web')->user();
-
             // Check if the authenticated user has the required permission to store positions
-            if (is_null($user) || !$user->can('usermanagement.create')) {
-                abort(403, 'Sorry! You are not allowed to store positions.');
+            if (is_null($this->user) || !$this->user->can('usermanagement.create')) {
+                abort(403, 'Sorry! You are not allowed to create positions.');
             }
 
             // Get validated data
@@ -89,11 +93,8 @@
          */
         public function create()
         {
-            // Get the authenticated user
-            $user = Auth::guard('web')->user();
-
             // Check if the authenticated user has the required permission to create positions
-            if (is_null($user) || !$user->can('usermanagement.create')) {
+            if (is_null($this->user) || !$this->user->can('usermanagement.create')) {
                 abort(403, 'Sorry! You are not allowed to create positions.');
             }
 
@@ -110,11 +111,8 @@
          */
         public function edit($id)
         {
-            // Get the authenticated user
-            $user = Auth::guard('web')->user();
-
             // Check if the authenticated user has the required permission to edit positions
-            if (is_null($user) || !$user->can('usermanagement.update')) {
+            if (is_null($this->user) || !$this->user->can('usermanagement.update')) {
                 abort(403, 'Sorry! You are not allowed to edit positions.');
             }
 
@@ -135,11 +133,8 @@
          */
         public function update(PositionRequest $request, $id)
         {
-            // Get the authenticated user
-            $user = Auth::guard('web')->user();
-
             // Check if the authenticated user has the required permission to update positions
-            if (is_null($user) || !$user->can('usermanagement.update')) {
+            if (is_null($this->user) || !$this->user->can('usermanagement.update')) {
                 abort(403, 'Sorry! You are not allowed to update positions.');
             }
 
@@ -173,27 +168,24 @@
          */
         public function destroy($id)
         {
-            // Get the authenticated user
-            $user = Auth::guard('web')->user();
-        
             // Check if the authenticated user has the required permission to delete positions
-            if (is_null($user) || !$user->can('usermanagement.delete')) {
+            if (is_null($this->user) || !$this->user->can('usermanagement.delete')) {
                 abort(403, 'Sorry! You are not allowed to delete positions.');
             }
-        
+
             // Find the position by ID
             $position = Position::findOrFail($id);
-        
+
             // Check if the position has associated roles
             if ($position->roles()->count() > 0) {
                 return redirect()->route('users.positions.index')
                                  ->with('error', 'Cannot delete position because it has associated roles.');
             }
-        
+
             try {
                 // If no errors, delete the position from the database
                 $position->delete();
-        
+
                 // Redirect to the positions index page with a success message
                 return redirect()->route('users.positions.index')
                                  ->with('success', 'Position deleted successfully.');
@@ -213,11 +205,8 @@
          */
         public function dataForDatatables(Request $request)
         {
-            // Get the authenticated user
-            $user = Auth::guard('web')->user();
-
             // Check if the authenticated user has the required permission to view positions
-            if (is_null($user) || !$user->can('usermanagement.read')) {
+            if (is_null($this->user) || !$this->user->can('usermanagement.read')) {
                 abort(403, 'Sorry! You are not allowed to view positions.');
             }
 
@@ -286,11 +275,8 @@
          */
         public function export(Request $request)
         {
-            // Get the authenticated user
-            $user = Auth::guard('web')->user();
-
             // Check if the authenticated user has the required permission to export positions
-            if (is_null($user) || !$user->can('usermanagement.export')) {
+            if (is_null($this->user) || !$this->user->can('usermanagement.export')) {
                 abort(403, 'Sorry! You are not allowed to export positions.');
             }
 
