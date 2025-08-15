@@ -82,10 +82,7 @@
             // Apply search filter if provided
             if ($request->has('search') && !empty($request->get('search'))) {
                 $search = $request->get('search');
-                $query->where(function ($q) use ($search) {
-                    $q->whereRaw('LOWER(name) LIKE ?', ['%' . strtolower($search) . '%'])
-                        ->orWhereRaw('LOWER(email) LIKE ?', ['%' . strtolower($search) . '%']);
-                });
+                $query->whereAny(['name','email'],'like','%'.$search.'%');
             }
 
             // Apply sorting if provided
@@ -241,13 +238,16 @@
             return view('usermanagement::users.create', compact('roles', 'branches'));
         }
 
-        public function export()
+        public function export(Request $request)
         {
             if (is_null($this->user) || !$this->user->can('usermanagement.export')) {
                 abort(403, 'Sorry! You are not allowed to export users.');
             }
 
-            return Excel::download(new UsersExport, 'users.xlsx');
+            // Get search parameter from request
+            $search = $request->get('search');
+
+            return Excel::download(new UsersExport($search), 'users.xlsx');
         }
 
         public function profile()
@@ -263,7 +263,6 @@
             $validatedData = $request->validate([
                 'name'  => 'required|string|max:255',
                 'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
-                'nik'   => 'required|string|max:255|unique:users,nik,' . $user->id,
                 'sign'  => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             ]);
 

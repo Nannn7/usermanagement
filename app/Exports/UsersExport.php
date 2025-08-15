@@ -9,10 +9,21 @@ use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use Maatwebsite\Excel\Concerns\WithColumnFormatting;
 use Modules\Usermanagement\Models\User;
 
-class UsersExport implements WithColumnFormatting, WithHeadings, FromCollection, withMapping
+class UsersExport implements WithColumnFormatting, WithHeadings, FromCollection, WithMapping
 {
+    protected $search;
+
+    public function __construct($search = null)
+    {
+        $this->search = $search;
+    }
+
     public function collection(){
-        return User::all();
+        return User::query()
+            ->when($this->search, function ($query) {
+                 $query->whereAny(['name','email'],'like','%'.$this->search.'%');
+            })
+            ->get();
     }
 
     public function map($row): array{
@@ -21,7 +32,8 @@ class UsersExport implements WithColumnFormatting, WithHeadings, FromCollection,
             $row->name,
             $row->email,
             $row->nik,
-            $row->branch->name,
+            $row->branch?->name,
+            $row->roles?->pluck('name')->implode(', '),
             $row->created_at
         ];
     }
@@ -32,6 +44,7 @@ class UsersExport implements WithColumnFormatting, WithHeadings, FromCollection,
             'Email',
             'NIK',
             'Branch',
+            'Roles',
             'Created At'
         ];
     }
@@ -39,7 +52,7 @@ class UsersExport implements WithColumnFormatting, WithHeadings, FromCollection,
     public function columnFormats(): array{
         return [
             'A' => \PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_NUMBER,
-            'F' => \PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_DATE_DATETIME
+            'G' => \PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_DATE_DATETIME
         ];
     }
 }
