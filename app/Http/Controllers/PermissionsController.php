@@ -276,9 +276,7 @@
             // Apply search filter if provided
             if ($request->has('search') && !empty($request->get('search'))) {
                 $search = $request->get('search');
-                $query->where(function ($q) use ($search) {
-                    $q->whereRaw('LOWER(name) LIKE ?', ['%' . strtolower($search) . '%']);
-                });
+                $query->where('name', 'like', '%' . $search . '%');
             }
 
             // Apply sorting if provided
@@ -303,14 +301,11 @@
             // Get the filtered count of records
             $filteredRecords = $query->count();
 
-
             // Get the data for the current page
-            $permissions = $query->get();
+            $data = $query->get();
 
-
-            $permissions = $permissions->map(function ($permission) {
+            $data = $data->map(function ($permission) {
                 $permission->roles = $permission->roles($permission);
-
                 return $permission;
             });
 
@@ -328,7 +323,7 @@
                 'pageCount'       => $pageCount,
                 'page'            => $currentPage,
                 'totalCount'      => $totalRecords,
-                'data'            => $permissions,
+                'data'            => $data,
             ]);
         }
 

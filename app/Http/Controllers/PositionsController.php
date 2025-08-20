@@ -223,11 +223,7 @@
             // Apply search filter if provided
             if ($request->has('search') && !empty($request->get('search'))) {
                 $search = $request->get('search');
-                $query->where(function ($q) use ($search) {
-                    $q->whereRaw('LOWER(code) LIKE ?', ['%' . strtolower($search) . '%'])
-                      ->orWhereRaw('LOWER(name) LIKE ?', ['%' . strtolower($search) . '%'])
-                      ->orWhereRaw('CAST(level AS TEXT) LIKE ?', ['%' . $search . '%']);
-                });
+                $query->whereAny(['code', 'name', 'level'], 'like', '%' . $search . '%');
             }
 
             // Apply sorting if provided
@@ -253,7 +249,7 @@
             $filteredRecords = $query->count();
 
             // Get the data for the current page
-            $positions = $query->get();
+            $data = $query->get();
 
             // Calculate the page count
             $size = $request->get('size', 10); // Default to 10 if not set
@@ -270,7 +266,7 @@
                 'pageCount'       => $pageCount,
                 'page'            => $currentPage,
                 'totalCount'      => $totalRecords,
-                'data'            => $positions,
+                'data'            => $data,
             ]);
         }
 

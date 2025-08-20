@@ -273,14 +273,17 @@
             // Retrieve data from the database
             $query = Role::query();
 
+            if(!$this->user->hasRole('administrator')){
+                $query->where('name', '!=', 'administrator');
+            }
+
             // Apply search filter if provided
             if ($request->has('search') && !empty($request->get('search'))) {
                 $search = $request->get('search');
                 $query->where(function ($q) use ($search) {
-                    $q->whereRaw('LOWER(name) LIKE ?', ['%' . strtolower($search) . '%'])
+                    $q->where('name', 'like', '%' . $search . '%')
                       ->orWhereHas('position', function ($query) use ($search) {
-                          $query->whereRaw('LOWER(name) LIKE ?', ['%' . strtolower($search) . '%'])
-                                ->orWhereRaw('CAST(level AS TEXT) LIKE ?', ['%' . $search . '%']);
+                          $query->whereAny(['name', 'level'], 'like','%'.$search.'%');
                       });
                 });
             }
@@ -290,19 +293,17 @@
                 $order  = $request->get('sortOrder');
                 $column = $request->get('sortField');
 
-                // Handle sorting for position-related columns
                 if ($column === 'position_name') {
                     $query->leftJoin('positions', 'roles.position_id', '=', 'positions.id')
-                          ->orderByRaw('LOWER(positions.name) ' . $order)
+                          ->orderBy('positions.name', $order)
                           ->select('roles.*'); // Select only from roles table to avoid column conflicts
                 } else if ($column === 'level') {
                     $query->leftJoin('positions', 'roles.position_id', '=', 'positions.id')
                           ->orderBy('positions.level', $order)
                           ->select('roles.*'); // Select only from roles table to avoid column conflicts
                 } else {
-                    // Make sorting case-insensitive for string columns
                     if ($column === 'name') {
-                        $query->orderByRaw('LOWER(roles.name) ' . $order);
+                        $query->orderBy('roles.name', $order);
                     } else {
                         $query->orderBy($column, $order);
                     }
@@ -328,7 +329,7 @@
             $filteredRecords = $countQuery->distinct()->count('roles.id');
 
             // Get the data for the current page
-            $roles = $query->with('position')->get();
+            $data = $query->with('position')->get();
 
             // Calculate the page count - ensure we don't divide by zero
             $pageSize = $request->get('size', 10); // Default to 10 if not provided
@@ -345,7 +346,7 @@
                 'pageCount'       => $pageCount,
                 'page'            => $currentPage,
                 'totalCount'      => $totalRecords,
-                'data'            => $roles,
+                'data'            => $data,
             ]);
         }
 

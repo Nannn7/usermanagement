@@ -79,10 +79,16 @@
             // Retrieve data from the database
             $query = User::query();
 
+            if(!$this->user->hasRole('administrator')){
+                $query->whereHas('roles', function($q){
+                    $q->where('name', '!=', 'administrator');
+                });
+            }
+
             // Apply search filter if provided
             if ($request->has('search') && !empty($request->get('search'))) {
                 $search = $request->get('search');
-                $query->whereAny(['name','email'],'like','%'.$search.'%');
+                $query->whereAny(['name', 'email'], 'like', '%'.$search.'%');
             }
 
             // Apply sorting if provided
@@ -108,7 +114,7 @@
             $filteredRecords = $query->count();
 
             // Get the data for the current page
-            $users = $query->with(['branch', 'roles'])->get();
+            $data = $query->with(['branch', 'roles'])->get();
 
             // Calculate the page count
             $pageCount = ceil($totalRecords / $request->get('size'));
@@ -124,7 +130,7 @@
                 'pageCount'       => $pageCount,
                 'page'            => $currentPage,
                 'totalCount'      => $totalRecords,
-                'data'            => $users,
+                'data'            => $data,
             ]);
         }
 
@@ -144,6 +150,9 @@
 
             $user     = User::find($id);
             $roles    = Role::all();
+            if(!$this->user->hasRole('administrator')){
+                $roles = $roles->where('name', '!=', 'administrator');
+            }
             $branches = Branch::all();
             return view('usermanagement::users.create', compact('user', 'roles', 'branches'));
         }
@@ -234,6 +243,9 @@
             }
 
             $roles    = Role::all();
+            if(!$this->user->hasRole('administrator')){
+                $roles = $roles->where('name', '!=', 'administrator');
+            }
             $branches = Branch::all();
             return view('usermanagement::users.create', compact('roles', 'branches'));
         }

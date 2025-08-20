@@ -7,8 +7,10 @@
 @section('content')
     <div class="container-fluid">
         <div class="grid">
-            <div class="card card-grid min-w-full" data-datatable="false" data-datatable-page-size="5" data-datatable-state-save="true" id="permissions-table" data-api-url="{{ route('users.permissions.datatables') }}">
-                <div class="card-header py-5 flex-wrap">
+            <div class="min-w-full card card-grid" data-datatable="false" data-datatable-page-size="5"
+                data-datatable-state-save="true" id="permissions-table"
+                data-api-url="{{ route('users.permissions.datatables') }}">
+                <div class="flex-wrap py-5 card-header">
                     <h3 class="card-title">
                         List of Permissions
                     </h3>
@@ -21,38 +23,43 @@
                         </div>
                         <div class="flex flex-wrap gap-2.5 lg:gap-5">
                             <div class="h-[24px] border border-r-gray-200"> </div>
-                            <a class="btn btn-sm btn-light" href="{{ route('users.permissions.export') }}"> Export to Excel </a>
-                            <a class="btn btn-sm btn-primary" href="{{ route('users.permissions.create') }}"> Add Permission </a>
+                            <a class="btn btn-sm btn-light" href="{{ route('users.permissions.export') }}"> Export to Excel
+                            </a>
+                            <a class="btn btn-sm btn-primary" href="{{ route('users.permissions.create') }}"> Add Permission
+                            </a>
                         </div>
                     </div>
                 </div>
                 <div class="card-body">
                     <div class="scrollable-x-auto">
-                        <table class="table table-auto table-border align-middle text-gray-700 font-medium text-sm" data-datatable-table="true">
+                        <table class="table text-sm font-medium text-gray-700 align-middle table-auto table-border"
+                            data-datatable-table="true">
                             <thead>
-                            <tr>
-                                <th class="w-14">
-                                    <input class="checkbox checkbox-sm" data-datatable-check="true" type="checkbox"/>
-                                </th>
-                                <th class="min-w-[250px]" data-datatable-column="name">
-                                    <span class="sort"> <span class="sort-label"> Permission </span>
-                                        <span class="sort-icon"> </span> </span>
-                                </th>
-                                <th class="min-w-[250px]" data-datatable-column="roles">
-                                    <span class="sort"> <span class="sort-label"> Roles </span>
-                                        <span class="sort-icon"> </span> </span>
-                                </th>
-                                <th class="min-w-[50px] text-center" data-datatable-column="actions">Action</th>
-                            </tr>
+                                <tr>
+                                    <th class="w-14">
+                                        <input class="checkbox checkbox-sm" data-datatable-check="true" type="checkbox" />
+                                    </th>
+                                    <th class="min-w-[250px]" data-datatable-column="name">
+                                        <span class="sort"> <span class="sort-label"> Permission </span>
+                                            <span class="sort-icon"> </span> </span>
+                                    </th>
+                                    <th class="min-w-[250px]" data-datatable-column="roles">
+                                        <span class="sort"> <span class="sort-label"> Roles </span>
+                                            <span class="sort-icon"> </span> </span>
+                                    </th>
+                                    <th class="min-w-[50px] text-center" data-datatable-column="actions">Action</th>
+                                </tr>
                             </thead>
                         </table>
                     </div>
-                    <div class="card-footer justify-center md:justify-between flex-col md:flex-row gap-3 text-gray-600 text-2sm font-medium">
-                        <div class="flex items-center gap-2">
+                    <div
+                        class="flex-col gap-3 justify-center font-medium text-gray-600 card-footer md:justify-between md:flex-row text-2sm">
+                        <div class="flex gap-2 items-center">
                             Show
-                            <select class="select select-sm w-16" data-datatable-size="true" name="perpage"> </select> per page
+                            <select class="w-16 select select-sm" data-datatable-size="true" name="perpage"> </select> per
+                            page
                         </div>
-                        <div class="flex items-center gap-4">
+                        <div class="flex gap-4 items-center">
                             <span data-datatable-info="true"> </span>
                             <div class="pagination" data-datatable-pagination="true">
                             </div>
@@ -70,7 +77,7 @@
         function deleteData(data) {
             Swal.fire({
                 title: 'Are you sure?',
-                text: "You won't be able to revert this!" ,
+                text: "You won't be able to revert this!",
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#3085d6',
@@ -80,14 +87,14 @@
                 if (result.isConfirmed) {
                     $.ajaxSetup({
                         headers: {
-                            'X-CSRF-TOKEN': '{{ csrf_token()  }}'
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
                         }
                     });
 
                     $.ajax(`permissions/${data}`, {
                         type: 'DELETE'
                     }).then((response) => {
-                        swal.fire('Deleted!', 'User has been deleted.','success').then(() => {
+                        swal.fire('Deleted!', 'User has been deleted.', 'success').then(() => {
                             window.location.reload();
                         });
                     }).catch((error) => {
@@ -102,7 +109,7 @@
         const element = document.querySelector('#permissions-table');
         const searchInput = document.getElementById('search');
         const apiUrl = element.getAttribute('data-api-url');
-        const colors = ['','badge-primary', 'badge-success', 'badge-info', 'badge-danger', 'badge-warning', 'badge-dark'];
+        const colors = ['', 'badge-primary', 'badge-success', 'badge-info', 'badge-danger', 'badge-warning', 'badge-dark'];
 
 
         const dataTableOptions = {
@@ -125,12 +132,12 @@
                 roles: {
                     title: 'Roles',
                     render: (item, data) => {
-                         const _render = data.roles.map((role) =>{
+                        const _render = data.roles.map((role) => {
                             const randomColor = colors[Math.floor(Math.random() * colors.length)];
                             return `<span class="badge ${randomColor} badge-sm">${role.name}</span>`;
-                         });
+                        });
 
-                         return _render.join(' ');
+                        return _render.join(' ');
                     }
                 },
                 actions: {
@@ -151,10 +158,10 @@
 
         let dataTable = new KTDataTable(element, dataTableOptions);
         // Custom search functionality
-        searchInput.addEventListener('input', function () {
+        searchInput.addEventListener('input', function() {
             const searchValue = this.value.trim();
             dataTable.search(searchValue, true);
+            dataTable.goPage(1);
         });
     </script>
 @endpush
-
