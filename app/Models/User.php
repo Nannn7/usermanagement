@@ -1,94 +1,105 @@
 <?php
 
-    namespace Modules\Usermanagement\Models;
+namespace Modules\Usermanagement\Models;
 
-    use Illuminate\Database\Eloquent\Factories\HasFactory;
-    use Illuminate\Database\Eloquent\SoftDeletes;
-    use Illuminate\Foundation\Auth\User as Authenticatable;
-    use Illuminate\Notifications\Notifiable;
-    use Modules\Basicdata\Models\Branch;
-    use Spatie\Permission\Traits\HasRoles;
-    use Mattiverse\Userstamps\Traits\Userstamps;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+use Modules\Basicdata\Models\Branch;
+use Modules\Adk\Models\Appointment;
+use Spatie\Permission\Traits\HasRoles;
+use Mattiverse\Userstamps\Traits\Userstamps;
+
+/**
+ * Class User
+ *
+ * This class extends the Laravel's Authenticatable class and represents a User in the application.
+ * It includes traits for using factories, notifications, API tokens, and UUIDs.
+ *
+ * @property string $name           The name of the user.
+ * @property string $email          The email of the user.
+ * @property string $password       The hashed password of the user.
+ * @property string $remember_token The token used for "remember me" functionality.
+ *
+ * @package App\Models
+ */
+class User extends Authenticatable
+{
+    use HasFactory, Notifiable, Userstamps, HasRoles, softDeletes;
+
+    protected $guard_name = ['web'];
 
     /**
-     * Class User
+     * The attributes that are mass assignable.
      *
-     * This class extends the Laravel's Authenticatable class and represents a User in the application.
-     * It includes traits for using factories, notifications, API tokens, and UUIDs.
+     * These are the attributes that can be set in bulk during a create or update operation.
      *
-     * @property string $name           The name of the user.
-     * @property string $email          The email of the user.
-     * @property string $password       The hashed password of the user.
-     * @property string $remember_token The token used for "remember me" functionality.
-     *
-     * @package App\Models
+     * @var array<int, string>
      */
-    class User extends Authenticatable
+    protected $fillable = [
+        'name',
+        'email',
+        'password',
+        'nik',
+        'branch_id',
+        'profile_photo_path',
+        'last_login_at',
+        'last_login_ip',
+        'sign'
+    ];
+
+    /**
+     * The attributes that should be hidden for serialization.
+     *
+     * These are the attributes that will be hidden when the model is converted to an array or JSON.
+     *
+     * @var array<int, string>
+     */
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
+
+    /**
+     * Get the attributes that should be cast.
+     *
+     * This method defines how the attributes should be cast when accessed.
+     * In this case, 'email_verified_at' is cast to 'datetime', 'password' is cast to 'hashed', and 'id' is cast to 'string'.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
     {
-        use HasFactory, Notifiable, Userstamps, HasRoles, softDeletes;
-
-        protected $guard_name = ['web'];
-
-        /**
-         * The attributes that are mass assignable.
-         *
-         * These are the attributes that can be set in bulk during a create or update operation.
-         *
-         * @var array<int, string>
-         */
-        protected $fillable = [
-            'name',
-            'email',
-            'password',
-            'nik',
-            'branch_id',
-            'profile_photo_path',
-            'last_login_at',
-            'last_login_ip',
-            'sign'
+        return [
+            'email_verified_at' => 'datetime',
+            'password'          => 'hashed',
+            'id'                => 'string',
         ];
-
-        /**
-         * The attributes that should be hidden for serialization.
-         *
-         * These are the attributes that will be hidden when the model is converted to an array or JSON.
-         *
-         * @var array<int, string>
-         */
-        protected $hidden = [
-            'password',
-            'remember_token',
-        ];
-
-        /**
-         * Get the attributes that should be cast.
-         *
-         * This method defines how the attributes should be cast when accessed.
-         * In this case, 'email_verified_at' is cast to 'datetime', 'password' is cast to 'hashed', and 'id' is cast to 'string'.
-         *
-         * @return array<string, string>
-         */
-        protected function casts()
-        : array
-        {
-            return [
-                'email_verified_at' => 'datetime',
-                'password'          => 'hashed',
-                'id'                => 'string',
-            ];
-        }
-
-        public function branch(){
-            return $this->belongsTo(Branch::class);
-        }
-
-        /**
-         * Create a new factory instance for the model.
-         *
-         * @return \Illuminate\Database\Eloquent\Factories\Factory
-         */
-        protected static function newFactory()
-        {
-            return \Modules\Usermanagement\Database\Factories\UserFactory::new();
-        }
     }
+
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class);
+    }
+
+    /**
+     * Create a new factory instance for the model.
+     *
+     * @return \Illuminate\Database\Eloquent\Factories\Factory
+     */
+    protected static function newFactory()
+    {
+        return \Modules\Usermanagement\Database\Factories\UserFactory::new();
+    }
+
+    /**
+     * Get all of the appointments for the User
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function appointments()
+    {
+        return $this->hasMany(Appointment::class, 'admin_id');
+    }
+}
