@@ -1,35 +1,42 @@
 <?php
 
-    namespace Modules\Usermanagement\Database\Seeders;
+namespace Modules\Usermanagement\Database\Seeders;
 
-    use Faker\Generator;
-    use Illuminate\Database\Seeder;
-    use Illuminate\Support\Facades\Hash;
-    use Modules\Usermanagement\Models\User;
-    use Spatie\Permission\Models\Role;
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
+use Modules\Usermanagement\Models\User;
+use Modules\Usermanagement\Database\Seeders\RolesSeeder;
 
-    class UsersSeeder extends Seeder
+class UsersSeeder extends Seeder
+{
+    /**
+     * Run the database seeds.
+     */
+    public function run(): void
     {
-        /**
-         * Run the database seeds.
-         *
-         * @return void
-         */
-        public function run(Generator $faker)
-        {
-            $roles = Role::all();
+        $roleSeeder = new RolesSeeder();
+        $rolesData = $roleSeeder->data();
 
-            foreach ($roles as $role) {
-                $user = User::create([
-                    'name'              => $role->name,
-                    'email'             => $role->name . '@ag.co.id',
-                    'password'          => Hash::make('bagbag'),
-                    'branch_id'         => 1,
-                    'nik'               => '000000',
-                    'email_verified_at' => now(),
-                ]);
+        foreach ($rolesData as $roleData) {
+            if ($roleData['name'] === 'administrator') {
+                $user = User::firstOrCreate(
+                    ['email' => $roleData['name'] . '@ag.co.id'],
+                    [
+                        'name' => $roleData['name'],
+                        'password' => Hash::make('bagbag'),
+                        'branch_id' => 1,
+                        'nik' => '000000',
+                        'email_verified_at' => now(),
+                    ]
+                );
+
+                $role = \Spatie\Permission\Models\Role::firstOrCreate(
+                    ['name' => $roleData['name']],
+                    ['guard_name' => 'web']
+                );
 
                 $user->assignRole($role);
             }
         }
     }
+}
