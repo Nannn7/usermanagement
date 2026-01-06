@@ -10,6 +10,7 @@ use Modules\Basicdata\Models\Branch;
 use Modules\Adk\Models\Appointment;
 use Spatie\Permission\Traits\HasRoles;
 use Mattiverse\Userstamps\Traits\Userstamps;
+use Modules\Mombod\Models\MeetingParticipant;
 
 /**
  * Class User
@@ -101,5 +102,10 @@ class User extends Authenticatable
     public function appointments()
     {
         return $this->hasMany(Appointment::class, 'admin_id');
+    }
+
+    public function meetings()
+    {
+        return $this->hasMany(MeetingParticipant::class);
     }
 }
