@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Modules\Basicdata\Models\Branch;
+use Modules\Corsec\Models\Directorate;
 use Spatie\Permission\Traits\HasRoles;
 use Mattiverse\Userstamps\Traits\Userstamps;
 
@@ -81,6 +82,12 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Branch::class);
     }
+
+    public function directorate()
+    {
+        return $this->belongsTo(Directorate::class, 'directorate_id');
+    }
+
 
     /**
      * Create a new factory instance for the model.
