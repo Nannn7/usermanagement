@@ -43,6 +43,7 @@ class User extends Authenticatable
         'password',
         'nik',
         'branch_id',
+        'directorate_id',
         'profile_photo_path',
         'last_login_at',
         'last_login_ip',

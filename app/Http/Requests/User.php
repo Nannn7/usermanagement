@@ -23,6 +23,7 @@
             $rules = [
                 'name'               => 'required|string|max:255',
                 'branch_id'          => 'nullable|exists:branches,id',
+                'directorate_id'     => 'nullable|exists:corsec_directorates,id',
                 'profile_photo_path' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
                 'sign'               => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             ];
