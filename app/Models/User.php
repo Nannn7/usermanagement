@@ -8,6 +8,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Modules\Basicdata\Models\Branch;
 use Modules\Corsec\Models\Directorate;
+use Modules\Usermanagement\Models\Position;
 use Spatie\Permission\Traits\HasRoles;
 use Mattiverse\Userstamps\Traits\Userstamps;
 
@@ -44,6 +45,7 @@ class User extends Authenticatable
         'nik',
         'branch_id',
         'directorate_id',
+        'position_id',
         'profile_photo_path',
         'last_login_at',
         'last_login_ip',
@@ -87,6 +89,11 @@ class User extends Authenticatable
     public function directorate()
     {
         return $this->belongsTo(Directorate::class, 'directorate_id');
+    }
+
+    public function position()
+    {
+        return $this->belongsTo(Position::class, 'position_id');
     }
 
 

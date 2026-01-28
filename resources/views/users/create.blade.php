@@ -115,6 +115,32 @@
                                         @enderror
                                     </div>
                                 </div>
+                                <div class="flex items-baseline flex-wrap lg:flex-nowrap gap-2.5">
+                                    <label class="form-label max-w-56">
+                                        Position
+                                    </label>
+                                    <div class="flex flex-wrap items-baseline w-full">
+                                        <select class="input tomselect w-full @error('position_id') border-danger @enderror" name="position_id" id="position_id">
+                                            <option value="">Pilih Position</option>
+                                            @if(isset($positions))
+                                                @foreach($positions as $row)
+                                                    @if(isset($user))
+                                                        <option value="{{ $row->id }}" {{ isset($user->position_id) && $user->position_id == $row->id?'selected' : '' }}>
+                                                            {{ $row->name }}
+                                                        </option>
+                                                    @else
+                                                        <option value="{{ $row->id }}">
+                                                            {{ $row->name }}
+                                                        </option>
+                                                    @endif
+                                                @endforeach
+                                            @endif
+                                        </select>
+                                        @error('position_id')
+                                        <em class="alert text-danger text-sm">{{ $message }}</em>
+                                        @enderror
+                                    </div>
+                                </div>
                                 @if(isset($user->id))
                                 <div class="flex items-baseline flex-wrap lg:flex-nowrap gap-2.5">
                                     <label class="form-label max-w-56">

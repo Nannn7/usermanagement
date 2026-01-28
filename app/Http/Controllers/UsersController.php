@@ -14,6 +14,7 @@
     use Modules\Usermanagement\Http\Requests\User as UserRequest;
     use Modules\Usermanagement\Models\Role;
     use Modules\Usermanagement\Models\User;
+    use Modules\Usermanagement\Models\Position;
     use Illuminate\Support\Facades\Storage;
     use Modules\Corsec\Models\Directorate;
 
@@ -115,7 +116,7 @@
             $filteredRecords = $query->count();
 
             // Get the data for the current page
-            $data = $query->with(['branch', 'directorate', 'roles'])->get();
+            $data = $query->with(['branch', 'directorate', 'position', 'roles'])->get();
 
             // Calculate the page count
             $pageCount = ceil($totalRecords / $request->get('size'));
@@ -156,7 +157,8 @@
             }
             $branches = Branch::all();
             $directorates = Directorate::query()->orderBy('name')->get();
-            return view('usermanagement::users.create', compact('user', 'roles', 'branches', 'directorates'));
+            $positions = Position::query()->orderBy('level')->orderBy('name')->get();
+            return view('usermanagement::users.create', compact('user', 'roles', 'branches', 'directorates', 'positions'));
         }
 
         /**
@@ -250,7 +252,8 @@
             }
             $branches = Branch::all();
             $directorates = Directorate::query()->orderBy('name')->get();
-            return view('usermanagement::users.create', compact('roles', 'branches', 'directorates'));
+            $positions = Position::query()->orderBy('level')->orderBy('name')->get();
+            return view('usermanagement::users.create', compact('roles', 'branches', 'directorates', 'positions'));
         }
 
         public function export(Request $request)

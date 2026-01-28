@@ -57,6 +57,10 @@
                                         <span class="sort"> <span class="sort-label"> Directorate </span>
                                             <span class="sort-icon"> </span> </span>
                                     </th>
+                                    <th class="min-w-[185px]" data-datatable-column="position">
+                                        <span class="sort"> <span class="sort-label"> Position </span>
+                                            <span class="sort-icon"> </span> </span>
+                                    </th>
                                     <th class="min-w-[185px]" data-datatable-column="role">
                                         <span class="sort"> <span class="sort-label"> Role </span>
                                             <span class="sort-icon"> </span> </span>
@@ -171,6 +175,12 @@
                     title: 'Directorate',
                     render: (item, data) => {
                         return data.directorate?.name || '-';
+                    },
+                },
+                position: {
+                    title: 'Position',
+                    render: (item, data) => {
+                        return data.position?.name || '-';
                     },
                 },
                 role: {
