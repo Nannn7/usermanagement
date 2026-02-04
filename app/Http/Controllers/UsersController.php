@@ -79,7 +79,17 @@
             }
 
             // Retrieve data from the database
+            $userTable = (new User())->getTable();
             $query = User::query();
+
+            $sortField = $request->get('sortField');
+            $sortOrder = $request->get('sortOrder');
+            $needsDirectorateJoin = empty($sortField) || empty($sortOrder) || $sortField === 'directorate';
+            if ($needsDirectorateJoin) {
+                $directorateTable = (new Directorate())->getTable();
+                $query->select($userTable . '.*')
+                    ->leftJoin($directorateTable . ' as directorates', 'directorates.id', '=', $userTable . '.directorate_id');
+            }
 
             if(!$this->user->hasRole('administrator')){
                 $query->whereHas('roles', function($q){
@@ -90,14 +100,32 @@
             // Apply search filter if provided
             if ($request->has('search') && !empty($request->get('search'))) {
                 $search = $request->get('search');
-                $query->whereAny(['name', 'email'], 'like', '%'.$search.'%');
+                $query->whereAny([$userTable . '.name', $userTable . '.email'], 'like', '%'.$search.'%');
             }
 
+            // Admin first, then apply sorting
+            $tableNames = config('permission.table_names', []);
+            $columnNames = config('permission.column_names', []);
+            $rolesTable = $tableNames['roles'] ?? 'roles';
+            $modelHasRoles = $tableNames['model_has_roles'] ?? 'model_has_roles';
+            $rolePivot = $columnNames['role_pivot_key'] ?? 'role_id';
+            $modelKey = $columnNames['model_morph_key'] ?? 'model_id';
+
+            $adminOrderSql = "case when exists (select 1 from {$modelHasRoles} mhr join {$rolesTable} r on r.id = mhr.{$rolePivot} where mhr.{$modelKey} = {$userTable}.id and mhr.model_type = ? and r.name = ?) then 0 else 1 end";
+            $query->orderByRaw($adminOrderSql, [User::class, 'administrator']);
+
             // Apply sorting if provided
-            if ($request->has('sortOrder') && !empty($request->get('sortOrder'))) {
-                $order  = $request->get('sortOrder');
-                $column = $request->get('sortField');
-                $query->orderBy($column, $order);
+            if (!empty($sortOrder) && !empty($sortField)) {
+                $order  = $sortOrder;
+                $column = $sortField;
+                if ($column === 'directorate' && $needsDirectorateJoin) {
+                    $query->orderBy('directorates.name', $order);
+                } else {
+                    $query->orderBy($userTable . '.' . $column, $order);
+                }
+            } else {
+                $query->orderByRaw('directorates.name is null, directorates.name asc')
+                    ->orderBy($userTable . '.name', 'asc');
             }
 
             // Get the total count of records
