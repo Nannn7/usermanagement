@@ -8,6 +8,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Modules\Basicdata\Models\Branch;
 use Modules\Corsec\Models\Directorate;
+use Modules\Corsec\Models\MeetingDecision;
 use Modules\Usermanagement\Models\Position;
 use Spatie\Permission\Traits\HasRoles;
 use Mattiverse\Userstamps\Traits\Userstamps;
@@ -99,6 +100,16 @@ class User extends Authenticatable
     public function position()
     {
         return $this->belongsTo(Position::class, 'position_id');
+    }
+
+    public function supportedMeetingDecisions()
+    {
+        return $this->belongsToMany(
+            MeetingDecision::class,
+            'corsec_meeting_decision_support_users',
+            'user_id',
+            'meeting_decision_id'
+        );
     }
 
 

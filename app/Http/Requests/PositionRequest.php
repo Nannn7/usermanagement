@@ -23,13 +23,15 @@ class PositionRequest extends FormRequest
      */
     public function rules(): array
     {
+        $positionId = $this->route('position') ?? $this->route('id') ?? $this->input('id');
+
         $rules = [
             'name' => 'required|string',
             'level' => 'required|integer',
         ];
 
         if ($this->method() === 'PUT') {
-            $rules['code'] = 'required|string|unique:positions,code,' . $this->id;
+            $rules['code'] = 'required|string|unique:positions,code,' . $positionId;
         } else {
             $rules['code'] = 'required|string|unique:positions,code';
         }

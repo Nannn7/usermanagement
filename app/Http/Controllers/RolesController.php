@@ -58,11 +58,8 @@ class RolesController extends Controller
             abort(403, 'Sorry! You are not allowed to view roles.');
         }
 
-        // Fetch all roles from the database
-        $roles = Role::all();
-
         // Return the view for displaying the roles
-        return view('usermanagement::roles.index', compact('roles'));
+        return view('usermanagement::roles.index');
     }
 
     /**
@@ -125,8 +122,14 @@ class RolesController extends Controller
             abort(403, 'Sorry! You are not allowed to create roles.');
         }
 
-        $permissiongroups = PermissionGroup::all();
-        $positions        = Position::all();
+        $permissiongroups = PermissionGroup::query()
+            ->with(['permission:id,name,permission_group_id'])
+            ->orderBy('name')
+            ->get(['id', 'name']);
+        $positions = Position::query()
+            ->orderBy('level')
+            ->orderBy('name')
+            ->get(['id', 'name', 'level']);
         // Return the view for creating a new role
         return view('usermanagement::roles.create', compact('permissiongroups', 'positions'));
     }
@@ -147,12 +150,17 @@ class RolesController extends Controller
         }
 
         // Fetch the specified role from the database
-        $role             = Role::find($id);
-        $permissions      = Permission::all();
-        $permissiongroups = PermissionGroup::all();
-        $positions        = Position::all();
+        $role = Role::with('permissions:id,name')->findOrFail($id);
+        $permissiongroups = PermissionGroup::query()
+            ->with(['permission:id,name,permission_group_id'])
+            ->orderBy('name')
+            ->get(['id', 'name']);
+        $positions = Position::query()
+            ->orderBy('level')
+            ->orderBy('name')
+            ->get(['id', 'name', 'level']);
         // Return the view for editing the role
-        return view('usermanagement::roles.create', compact('role', 'permissions', 'permissiongroups', 'positions'));
+        return view('usermanagement::roles.create', compact('role', 'permissiongroups', 'positions'));
     }
 
 
@@ -178,19 +186,19 @@ class RolesController extends Controller
             try {
                 // If no errors, update the role in the database
                 $role = Role::findorFail($id);
-                $role->update($request->all());
+                $role->update($validated);
 
                 $permissions = $request->input('permissions', []);
-                if (!empty($permissions)) {
-                    $permissions = Permission::whereIn('id', $permissions)->pluck('name')->toArray();
-                    // $role = Role::find($role->id);
-                    try {
-                        $role->syncPermissions($permissions);
-                    } catch (Exception $e) {
-                        return redirect()
-                            ->route('users.roles.index')
-                            ->with('error', 'Failed to sync permissions: ' . $e->getMessage());
-                    }
+                $permissions = !empty($permissions)
+                    ? Permission::whereIn('id', $permissions)->pluck('name')->toArray()
+                    : [];
+
+                try {
+                    $role->syncPermissions($permissions);
+                } catch (Exception $e) {
+                    return redirect()
+                        ->route('users.roles.index')
+                        ->with('error', 'Failed to sync permissions: ' . $e->getMessage());
                 }
 
                 // Redirect back to the roles index with a success message
@@ -267,19 +275,21 @@ class RolesController extends Controller
     public function dataForDatatables(Request $request)
     {
         if (is_null($this->user) || !$this->user->can('usermanagement.read')) {
-            return response()->json(['message' => 'Sorry! You are not allowed to view roles.', 'success' => false]);
+            return response()->json(['message' => 'Sorry! You are not allowed to view roles.', 'success' => false], 403);
         }
 
         // Retrieve data from the database
         $query = Role::query();
+        $baseQuery = Role::query();
 
         if (!$this->user->hasRole('administrator')) {
             $query->where('name', '!=', 'administrator');
+            $baseQuery->where('name', '!=', 'administrator');
         }
 
         // Apply search filter if provided
-        if ($request->has('search') && !empty($request->get('search'))) {
-            $search = $request->get('search');
+        $search = trim((string) $request->get('search', ''));
+        if ($search !== '') {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', '%' . $search . '%')
                     ->orWhereHas('position', function ($query) use ($search) {
@@ -290,8 +300,12 @@ class RolesController extends Controller
 
         // Apply sorting if provided
         if ($request->has('sortOrder') && !empty($request->get('sortOrder'))) {
-            $order  = $request->get('sortOrder');
-            $column = $request->get('sortField');
+            $order  = strtolower((string) $request->get('sortOrder'));
+            $column = (string) $request->get('sortField');
+
+            if (!in_array($order, ['asc', 'desc'], true)) {
+                $order = 'asc';
+            }
 
             if ($column === 'position_name') {
                 $query->leftJoin('positions', 'roles.position_id', '=', 'positions.id')
@@ -308,35 +322,23 @@ class RolesController extends Controller
                     $query->orderBy($column, $order);
                 }
             }
+        } else {
+            $query->orderBy('roles.name');
         }
 
-        // Create a copy of the query for counting
-        $countQuery = clone $query;
-
-        // Get the total count of records (without joins to avoid duplicates)
-        $totalRecords = Role::count();
-
-        // Apply pagination if provided
-        if ($request->has('page') && $request->has('size')) {
-            $page   = $request->get('page');
-            $size   = $request->get('size');
-            $offset = ($page - 1) * $size; // Calculate the offset
-
-            $query->skip($offset)->take($size);
-        }
-
-        // Get the filtered count of records - use distinct to avoid duplicates from joins
-        $filteredRecords = $countQuery->distinct()->count('roles.id');
+        $totalRecords = $baseQuery->count();
+        $filteredRecords = $search !== '' ? (clone $query)->distinct()->count('roles.id') : $totalRecords;
+        $page = max((int) $request->get('page', 1), 1);
+        $size = max((int) $request->get('size', 10), 1);
 
         // Get the data for the current page
-        $data = $query->with('position')->get();
+        $data = $query
+            ->with('position:id,name,level')
+            ->forPage($page, $size)
+            ->get();
 
         // Calculate the page count - ensure we don't divide by zero
-        $pageSize = $request->get('size', 10); // Default to 10 if not provided
-        $pageCount = $pageSize > 0 ? ceil($totalRecords / $pageSize) : 0;
-
-        // Calculate the current page number
-        $currentPage = $request->get('page') ?: 1;
+        $pageCount = $size > 0 ? ceil($filteredRecords / $size) : 0;
 
         // Return the response data as a JSON object
         return response()->json([
@@ -344,7 +346,7 @@ class RolesController extends Controller
             'recordsTotal'    => $totalRecords,
             'recordsFiltered' => $filteredRecords,
             'pageCount'       => $pageCount,
-            'page'            => $currentPage,
+            'page'            => $page,
             'totalCount'      => $totalRecords,
             'data'            => $data,
         ]);

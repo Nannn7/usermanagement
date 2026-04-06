@@ -22,6 +22,11 @@
                     </div>
                 </div>
                 <div class="card-body grid gap-5">
+                    @php
+                        $selectedPermissionNames = isset($role)
+                            ? $role->permissions->pluck('name')->flip()
+                            : collect();
+                    @endphp
                     <div class="flex items-baseline flex-wrap lg:flex-nowrap gap-2.5">
                         <label class="form-label max-w-56">
                             Name
@@ -70,10 +75,10 @@
                                 {{ ucwords($group->name) }}
                             </label>
                             <div class="flex flex-wrap items-baseline w-full gap-2.5">
-                                @foreach($group->getpermissionsByGroupId($group->id) as $permission)
+                                @foreach($group->permission as $permission)
                                 <label class="switch">
                                     @if(isset($role))
-                                        <input type="checkbox" value="{{ $permission->id }}" name="permissions[]" {{ $role->hasPermissionTo($permission->name) ? 'checked' : null }} />
+                                        <input type="checkbox" value="{{ $permission->id }}" name="permissions[]" {{ $selectedPermissionNames->has($permission->name) ? 'checked' : null }} />
                                     @else
                                         <input type="checkbox" value="{{ $permission->id }}" name="permissions[]"/>
                                     @endif

@@ -10,6 +10,7 @@
     use Modules\Usermanagement\Http\Requests\PermissionRequest;
     use Modules\Usermanagement\Models\Permission;
     use Modules\Usermanagement\Models\PermissionGroup;
+    use Modules\Usermanagement\Models\Role;
 
     /**
      * Class PermissionsController
@@ -267,53 +268,73 @@
         public function dataForDatatables(Request $request)
         {
             if (is_null($this->user) || !$this->user->can('usermanagement.read')) {
-                return response()->json(['message' => 'Sorry! You are not allowed to view permissions.','success' => false]);
+                return response()->json(['message' => 'Sorry! You are not allowed to view permissions.','success' => false], 403);
             }
 
             // Retrieve data from the database
-            $query = PermissionGroup::query();
+            $query = PermissionGroup::query()
+                ->with(['permission:id,name,permission_group_id']);
+            $baseQuery = PermissionGroup::query();
 
             // Apply search filter if provided
-            if ($request->has('search') && !empty($request->get('search'))) {
-                $search = $request->get('search');
+            $search = trim((string) $request->get('search', ''));
+            if ($search !== '') {
                 $query->where('name', 'like', '%' . $search . '%');
             }
 
             // Apply sorting if provided
             if ($request->has('sortOrder') && !empty($request->get('sortOrder'))) {
-                $order  = $request->get('sortOrder');
-                $column = $request->get('sortField');
+                $order  = strtolower((string) $request->get('sortOrder'));
+                $column = (string) $request->get('sortField');
+
+                if (!in_array($order, ['asc', 'desc'], true)) {
+                    $order = 'asc';
+                }
+
+                if ($column !== 'name') {
+                    $column = 'name';
+                }
+
                 $query->orderBy($column, $order);
+            } else {
+                $query->orderBy('name');
             }
 
-            // Get the total count of records
-            $totalRecords = $query->count();
+            $totalRecords = $baseQuery->count();
+            $filteredRecords = $search !== '' ? (clone $query)->count() : $totalRecords;
+            $page = max((int) $request->get('page', 1), 1);
+            $size = max((int) $request->get('size', 10), 1);
 
-            // Apply pagination if provided
-            if ($request->has('page') && $request->has('size')) {
-                $page   = $request->get('page');
-                $size   = $request->get('size');
-                $offset = ($page - 1) * $size; // Calculate the offset
+            $roles = Role::query()
+                ->with('permissions:id,name')
+                ->get(['id', 'name']);
 
-                $query->skip($offset)->take($size);
-            }
+            $data = $query
+                ->forPage($page, $size)
+                ->get(['id', 'name'])
+                ->map(function ($permissionGroup) use ($roles) {
+                    $permissionNames = $permissionGroup->permission->pluck('name')->filter();
 
-            // Get the filtered count of records
-            $filteredRecords = $query->count();
+                    $permissionGroup->roles = $roles
+                        ->filter(function ($role) use ($permissionNames) {
+                            return $role->permissions
+                                ->pluck('name')
+                                ->intersect($permissionNames)
+                                ->isNotEmpty();
+                        })
+                        ->values()
+                        ->map(function ($role) {
+                            return [
+                                'id' => $role->id,
+                                'name' => $role->name,
+                            ];
+                        });
 
-            // Get the data for the current page
-            $data = $query->get();
-
-            $data = $data->map(function ($permission) {
-                $permission->roles = $permission->roles($permission);
-                return $permission;
-            });
+                    return $permissionGroup;
+                });
 
             // Calculate the page count
-            $pageCount = ceil($totalRecords/$request->get('size'));
-
-            // Calculate the current page number
-            $currentPage = 0 + 1;
+            $pageCount = (int) ceil($filteredRecords / max($size, 1));
 
             // Return the response data as a JSON object
             return response()->json([
@@ -321,7 +342,7 @@
                 'recordsTotal'    => $totalRecords,
                 'recordsFiltered' => $filteredRecords,
                 'pageCount'       => $pageCount,
-                'page'            => $currentPage,
+                'page'            => $page,
                 'totalCount'      => $totalRecords,
                 'data'            => $data,
             ]);

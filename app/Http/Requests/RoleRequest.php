@@ -20,6 +20,7 @@
         public function rules()
         : array
         {
+            $roleId = $this->route('role') ?? $this->route('id') ?? $this->input('id');
 
             $rules = [
                 'guard_names' => 'required|string|in:web,api',
@@ -27,7 +28,7 @@
             ];
 
             if ($this->method() === 'PUT') {
-                $rules['name'] = 'required|string|max:255|unique:roles,name,' . $this->id;
+                $rules['name'] = 'required|string|max:255|unique:roles,name,' . $roleId;
             } else {
                 $rules['name'] = 'required|string|max:255|unique:roles,name';
             }

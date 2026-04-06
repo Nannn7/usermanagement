@@ -3,7 +3,8 @@
     namespace Modules\Usermanagement\Database\Seeders;
 
     use Illuminate\Database\Seeder;
-    use Spatie\Permission\Models\Role;
+    use Modules\Usermanagement\Models\Position;
+    use Modules\Usermanagement\Models\Role;
 
     class RolesSeeder extends Seeder
     {
@@ -12,22 +13,41 @@
          *
          * @return void
          */
-        public function run()
+        public function run(): void
         {
-            $data = $this->data();
+            foreach ($this->data() as $value) {
+                $positionId = null;
 
-            foreach ($data as $value) {
-                Role::create([
-                    'name'       => $value['name'],
-                    'guard_name' => 'web',
-                ]);
+                if (!empty($value['position_code'])) {
+                    $positionId = Position::withTrashed()
+                        ->where('code', $value['position_code'])
+                        ->value('id');
+                }
+
+                $role = Role::withTrashed()->updateOrCreate(
+                    [
+                        'name' => $value['name'],
+                        'guard_name' => $value['guard_name'],
+                    ],
+                    [
+                        'position_id' => $positionId,
+                    ]
+                );
+
+                if ($role->trashed()) {
+                    $role->restore();
+                }
             }
         }
 
-        public function data()
+        public function data(): array
         {
             return [
-                ['name' => 'administrator']
+                ['name' => 'administrator', 'guard_name' => 'web', 'position_code' => null],
+                ['name' => 'maker', 'guard_name' => 'web', 'position_code' => '001'],
+                ['name' => 'checker', 'guard_name' => 'web', 'position_code' => '002'],
+                ['name' => 'approver', 'guard_name' => 'web', 'position_code' => '003'],
+                ['name' => 'viewer', 'guard_name' => 'web', 'position_code' => null],
             ];
         }
     }

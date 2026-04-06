@@ -37,14 +37,14 @@
                             <i class="ki-filled ki-abstract text-gray-500 text-sm">
                             </i>
                             <span class="text-gray-600 font-medium">
-                                {{ Auth::user()->roles()->first()->name }}
+                                {{ $user->roles->first()?->name ?? '-' }}
                             </span>
                         </div>
                         <div class="flex gap-1.25 items-center">
                             <i class="ki-filled ki-geolocation text-gray-500 text-sm">
                             </i>
                             <span class="text-gray-600 font-medium">
-                                {{ Auth::user()->nik  }} | {{ Auth::user()->branch->name }}
+                                {{ $user->nik }} | {{ $user->branch?->name ?? '-' }}
                             </span>
                         </div>
                         <div class="flex gap-1.25 items-center">

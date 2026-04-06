@@ -54,11 +54,8 @@
                 abort(403, 'Sorry! You are not allowed to view positions.');
             }
 
-            // Fetch all positions from the database
-            $positions = Position::all();
-
             // Return the view for displaying the positions
-            return view('usermanagement::positions.index', compact('positions'));
+            return view('usermanagement::positions.index');
         }
 
         /**
@@ -177,14 +174,14 @@
         {
             // Check if the authenticated user has the required permission to delete positions
             if (is_null($this->user) || !$this->user->can('usermanagement.delete')) {
-                return response()->json(['message' => 'Sorry! You are not allowed to delete positions.','success' => false]);
+                return response()->json(['message' => 'Sorry! You are not allowed to delete positions.','success' => false], 403);
             }
 
             // Find the position by ID
             $position = Position::findOrFail($id);
 
             // Check if the position has associated roles
-            if ($position->roles()->count() > 0) {
+            if ($position->roles()->exists()) {
                 return redirect()->route('users.positions.index')
                                  ->with('error', 'Cannot delete position because it has associated roles.');
             }
@@ -214,49 +211,48 @@
         {
             // Check if the authenticated user has the required permission to view positions
             if (is_null($this->user) || !$this->user->can('usermanagement.read')) {
-                return response()->json(['message' => 'Sorry! You are not allowed to view positions.','success' => false]);
+                return response()->json(['message' => 'Sorry! You are not allowed to view positions.','success' => false], 403);
             }
 
             // Retrieve data from the database
-            $query = Position::query();
+            $query = Position::query()->select(['id', 'code', 'name', 'level']);
+            $baseCountQuery = Position::query();
 
             // Apply search filter if provided
-            if ($request->has('search') && !empty($request->get('search'))) {
-                $search = $request->get('search');
+            $search = trim((string) $request->get('search', ''));
+            if ($search !== '') {
                 $query->whereAny(['code', 'name', 'level'], 'like', '%' . $search . '%');
             }
 
             // Apply sorting if provided
             if ($request->has('sortOrder') && !empty($request->get('sortOrder'))) {
-                $order  = $request->get('sortOrder');
-                $column = $request->get('sortField');
+                $order  = strtolower((string) $request->get('sortOrder'));
+                $column = (string) $request->get('sortField');
+                $allowedSort = ['code', 'name', 'level'];
+
+                if (!in_array($order, ['asc', 'desc'], true)) {
+                    $order = 'asc';
+                }
+
+                if (!in_array($column, $allowedSort, true)) {
+                    $column = 'name';
+                }
+
                 $query->orderBy($column, $order);
+            } else {
+                $query->orderBy('level')->orderBy('name');
             }
 
-            // Get the total count of records
-            $totalRecords = $query->count();
-
-            // Apply pagination if provided
-            if ($request->has('page') && $request->has('size')) {
-                $page   = $request->get('page');
-                $size   = $request->get('size');
-                $offset = ($page - 1) * $size; // Calculate the offset
-
-                $query->skip($offset)->take($size);
-            }
-
-            // Get the filtered count of records
-            $filteredRecords = $query->count();
+            $totalRecords = $baseCountQuery->count();
+            $filteredRecords = $search !== '' ? (clone $query)->count() : $totalRecords;
+            $page = max((int) $request->get('page', 1), 1);
+            $size = max((int) $request->get('size', 10), 1);
 
             // Get the data for the current page
-            $data = $query->get();
+            $data = $query->forPage($page, $size)->get();
 
             // Calculate the page count
-            $size = $request->get('size', 10); // Default to 10 if not set
-            $pageCount = $size > 0 ? ceil($totalRecords / $size) : 0;
-
-            // Calculate the current page number
-            $currentPage = $request->get('page', 1); // Default to page 1 if not set
+            $pageCount = $size > 0 ? ceil($filteredRecords / $size) : 0;
 
             // Return the response data as a JSON object
             return response()->json([
@@ -264,7 +260,7 @@
                 'recordsTotal'    => $totalRecords,
                 'recordsFiltered' => $filteredRecords,
                 'pageCount'       => $pageCount,
-                'page'            => $currentPage,
+                'page'            => $page,
                 'totalCount'      => $totalRecords,
                 'data'            => $data,
             ]);
