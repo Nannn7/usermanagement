@@ -31,16 +31,16 @@ class User extends FormRequest
             'sign'               => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ];
 
-        if ($this->password !== null) {
-            $rules['password'] = 'required|string|min:8|confirmed';
-        }
         // if ($this->password !== null) {
-        //     $rules['password'] = [
-        //         'required',
-        //         'confirmed',
-        //         Password::min(8)->mixedCase()->numbers()->symbols(),
-        //     ];
+        //     $rules['password'] = 'required|string|min:8|confirmed';
         // }
+        if ($this->password !== null) {
+            $rules['password'] = [
+                'required',
+                'confirmed',
+                Password::min(8)->mixedCase()->numbers()->symbols(),
+            ];
+        }
 
         if ($this->method() === 'PUT') {
             $rules['email'] = 'required|email|unique:users,email,' . $userId;
