@@ -14,7 +14,9 @@
     use Modules\Usermanagement\Http\Requests\User as UserRequest;
     use Modules\Usermanagement\Models\Role;
     use Modules\Usermanagement\Models\User;
+    use Modules\Usermanagement\Models\Position;
     use Illuminate\Support\Facades\Storage;
+    use Modules\Corsec\Models\Directorate;
 
     /**
      * Class UsersController
@@ -73,54 +75,99 @@
         public function dataForDatatables(Request $request)
         {
             if (is_null($this->user) || !$this->user->can('usermanagement.read')) {
-                return response()->json(['message' => 'Sorry! You are not allowed to view users.','success' => false]);
+                return response()->json(['message' => 'Sorry! You are not allowed to view users.','success' => false], 403);
             }
 
-            // Retrieve data from the database
-            $query = User::query();
+            $userTable = (new User())->getTable();
+            $query = User::query()->select($userTable . '.*');
+            $baseQuery = User::query()->select($userTable . '.*');
 
             if(!$this->user->hasRole('administrator')){
-                $query->whereHas('roles', function($q){
-                    $q->where('name', '!=', 'administrator');
+                $query->whereDoesntHave('roles', function($q){
+                    $q->where('name', 'administrator');
+                });
+                $baseQuery->whereDoesntHave('roles', function($q){
+                    $q->where('name', 'administrator');
                 });
             }
 
             // Apply search filter if provided
-            if ($request->has('search') && !empty($request->get('search'))) {
-                $search = $request->get('search');
-                $query->whereAny(['name', 'email'], 'like', '%'.$search.'%');
+            $search = trim((string) $request->get('search', ''));
+            if ($search !== '') {
+                $query->where(function ($builder) use ($userTable, $search) {
+                    $builder->where($userTable . '.name', 'ilike', '%' . $search . '%')
+                        ->orWhere($userTable . '.email', 'ilike', '%' . $search . '%');
+                });
             }
+
+            // Admin first, then apply sorting
+            $tableNames = config('permission.table_names', []);
+            $columnNames = config('permission.column_names', []);
+            $rolesTable = $tableNames['roles'] ?? 'roles';
+            $modelHasRoles = $tableNames['model_has_roles'] ?? 'model_has_roles';
+            $rolePivot = $columnNames['role_pivot_key'] ?? 'role_id';
+            $modelKey = $columnNames['model_morph_key'] ?? 'model_id';
+
+            $adminOrderSql = "case when exists (select 1 from {$modelHasRoles} mhr join {$rolesTable} r on r.id = mhr.{$rolePivot} where mhr.{$modelKey} = {$userTable}.id and mhr.model_type = ? and r.name = ?) then 0 else 1 end";
+            $query->orderByRaw($adminOrderSql, [User::class, 'administrator']);
 
             // Apply sorting if provided
-            if ($request->has('sortOrder') && !empty($request->get('sortOrder'))) {
-                $order  = $request->get('sortOrder');
-                $column = $request->get('sortField');
-                $query->orderBy($column, $order);
+            $sortField = (string) $request->get('sortField', 'directorate');
+            $sortOrder = strtolower((string) $request->get('sortOrder', 'asc'));
+
+            if (!in_array($sortOrder, ['asc', 'desc'], true)) {
+                $sortOrder = 'asc';
             }
 
-            // Get the total count of records
-            $totalRecords = $query->count();
-
-            // Apply pagination if provided
-            if ($request->has('page') && $request->has('size')) {
-                $page   = $request->get('page');
-                $size   = $request->get('size');
-                $offset = ($page - 1) * $size; // Calculate the offset
-
-                $query->skip($offset)->take($size);
+            if ($sortField === 'directorate') {
+                $directorateTable = (new Directorate())->getTable();
+                $query->leftJoin($directorateTable . ' as directorates', 'directorates.id', '=', $userTable . '.directorate_id')
+                    ->select($userTable . '.*')
+                    ->orderByRaw('directorates.name is null')
+                    ->orderBy('directorates.name', $sortOrder);
+            } elseif ($sortField === 'branch') {
+                $branchTable = (new Branch())->getTable();
+                $query->leftJoin($branchTable . ' as branches', 'branches.id', '=', $userTable . '.branch_id')
+                    ->select($userTable . '.*')
+                    ->orderByRaw('branches.name is null')
+                    ->orderBy('branches.name', $sortOrder);
+            } elseif ($sortField === 'position') {
+                $positionTable = (new Position())->getTable();
+                $query->leftJoin($positionTable . ' as positions', 'positions.id', '=', $userTable . '.position_id')
+                    ->select($userTable . '.*')
+                    ->orderByRaw('positions.name is null')
+                    ->orderBy('positions.name', $sortOrder);
+            } elseif (in_array($sortField, ['name', 'email', 'nik'], true)) {
+                $query->orderBy($userTable . '.' . $sortField, $sortOrder);
+            } else {
+                $directorateTable = (new Directorate())->getTable();
+                $query->leftJoin($directorateTable . ' as directorates', 'directorates.id', '=', $userTable . '.directorate_id')
+                    ->select($userTable . '.*')
+                    ->orderByRaw('directorates.name is null')
+                    ->orderBy('directorates.name', 'asc');
             }
 
-            // Get the filtered count of records
-            $filteredRecords = $query->count();
+            $query->orderBy($userTable . '.name', 'asc');
+            $totalRecords = $baseQuery->count();
+            $filteredRecords = $search !== ''
+                ? (clone $query)->distinct()->count($userTable . '.id')
+                : $totalRecords;
+            $page = max((int) $request->get('page', 1), 1);
+            $size = max((int) $request->get('size', 10), 1);
 
             // Get the data for the current page
-            $data = $query->with(['branch', 'roles'])->get();
+            $data = $query
+                ->with([
+                    'branch:id,name',
+                    'directorate:id,name',
+                    'position:id,name',
+                    'roles:id,name',
+                ])
+                ->forPage($page, $size)
+                ->get();
 
             // Calculate the page count
-            $pageCount = ceil($totalRecords / $request->get('size'));
-
-            // Calculate the current page number
-            $currentPage = 0 + 1;
+            $pageCount = (int) ceil($filteredRecords / max($size, 1));
 
             // Return the response data as a JSON object
             return response()->json([
@@ -128,7 +175,7 @@
                 'recordsTotal'    => $totalRecords,
                 'recordsFiltered' => $filteredRecords,
                 'pageCount'       => $pageCount,
-                'page'            => $currentPage,
+                'page'            => $page,
                 'totalCount'      => $totalRecords,
                 'data'            => $data,
             ]);
@@ -148,13 +195,17 @@
                 abort(403, 'Sorry! You are not allowed to edit users.');
             }
 
-            $user     = User::find($id);
-            $roles    = Role::all();
-            if(!$this->user->hasRole('administrator')){
-                $roles = $roles->where('name', '!=', 'administrator');
-            }
-            $branches = Branch::all();
-            return view('usermanagement::users.create', compact('user', 'roles', 'branches'));
+            $user = User::with('roles:id,name')->find($id);
+            $roles = Role::query()
+                ->when(!$this->user->hasRole('administrator'), function ($query) {
+                    $query->where('name', '!=', 'administrator');
+                })
+                ->orderBy('name')
+                ->get(['id', 'name']);
+            $branches = Branch::query()->orderBy('name')->get(['id', 'name']);
+            $directorates = Directorate::query()->orderBy('name')->get(['id', 'name']);
+            $positions = Position::query()->orderBy('level')->orderBy('name')->get(['id', 'name', 'level']);
+            return view('usermanagement::users.create', compact('user', 'roles', 'branches', 'directorates', 'positions'));
         }
 
         /**
@@ -168,7 +219,7 @@
         public function destroy($id)
         {
             if (is_null($this->user) || !$this->user->can('usermanagement.delete')) {
-                return response()->json(['message' => 'Sorry! You are not allowed to delete users.','success' => false]);
+                return response()->json(['message' => 'Sorry! You are not allowed to delete users.','success' => false], 403);
             }
 
             $user = User::find($id);
@@ -242,12 +293,16 @@
                 abort(403, 'Sorry! You are not allowed to create a user.');
             }
 
-            $roles    = Role::all();
-            if(!$this->user->hasRole('administrator')){
-                $roles = $roles->where('name', '!=', 'administrator');
-            }
-            $branches = Branch::all();
-            return view('usermanagement::users.create', compact('roles', 'branches'));
+            $roles = Role::query()
+                ->when(!$this->user->hasRole('administrator'), function ($query) {
+                    $query->where('name', '!=', 'administrator');
+                })
+                ->orderBy('name')
+                ->get(['id', 'name']);
+            $branches = Branch::query()->orderBy('name')->get(['id', 'name']);
+            $directorates = Directorate::query()->orderBy('name')->get(['id', 'name']);
+            $positions = Position::query()->orderBy('level')->orderBy('name')->get(['id', 'name', 'level']);
+            return view('usermanagement::users.create', compact('roles', 'branches', 'directorates', 'positions'));
         }
 
         public function export(Request $request)
@@ -264,7 +319,11 @@
 
         public function profile()
         {
-            $user = Auth::user();
+            $user = Auth::user()->loadMissing([
+                'branch:id,name',
+                'roles:id,name',
+            ]);
+
             return view('usermanagement::users.profile', compact('user'));
         }
 
@@ -275,12 +334,13 @@
             $validatedData = $request->validate([
                 'name'  => 'required|string|max:255',
                 'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
+                'nik'   => 'nullable|string|max:6|unique:users,nik,' . $user->id,
                 'sign'  => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             ]);
 
             $user->name  = $validatedData['name'];
             $user->email = $validatedData['email'];
-            $user->nik   = $validatedData['nik'];
+            $user->nik   = $validatedData['nik'] ?? $user->nik;
 
             if ($request->hasFile('sign')) {
                 // Delete old e-sign if exists

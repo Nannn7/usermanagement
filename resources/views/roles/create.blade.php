@@ -23,6 +23,11 @@
                     </div>
                 </div>
                 <div class="card-body grid gap-5">
+                    @php
+                        $selectedPermissionNames = isset($role)
+                            ? $role->permissions->pluck('name')->flip()
+                            : collect();
+                    @endphp
                     <div class="flex items-baseline flex-wrap lg:flex-nowrap gap-2.5">
                         <label class="form-label max-w-56">
                             Name
@@ -68,6 +73,7 @@
                             </label>
                         </div>
                     </div>
+<<<<<<< HEAD
                     @foreach ($permissiongroups as $group)
                         @php
                             // The old "corsec" group used to cover Letter, Meeting,
@@ -90,6 +96,28 @@ $groupLabel = $isLegacyCorsec ? 'Approval Requests' : ucwords($group->name);
                             <div class="flex items-baseline flex-wrap lg:flex-nowrap gap-2.5 permission-group">
                                 <label class="form-label max-w-56">
                                     {{ $groupLabel }}
+=======
+                    @foreach($permissiongroups as $group)
+                        <div class="flex items-baseline flex-wrap lg:flex-nowrap gap-2.5">
+                            <label class="form-label max-w-56">
+                                {{ ucwords($group->name) }}
+                            </label>
+                            <div class="flex flex-wrap items-baseline w-full gap-2.5">
+                                @foreach($group->permission as $permission)
+                                <label class="switch">
+                                    @if(isset($role))
+                                        <input type="checkbox" value="{{ $permission->id }}" name="permissions[]" {{ $selectedPermissionNames->has($permission->name) ? 'checked' : null }} />
+                                    @else
+                                        <input type="checkbox" value="{{ $permission->id }}" name="permissions[]"/>
+                                    @endif
+                                    @php
+                                        $permission_name = explode('.',$permission->name);
+                                    @endphp
+
+                                    <span class="switch-label">
+                                        {{ ucwords($permission_name[1]) }}
+                                    </span>
+>>>>>>> 977c5c726e0eae0cc0dd6a5549e124d3773c516b
                                 </label>
                                 <div class="flex flex-wrap items-baseline w-full gap-2.5">
                                     <label class="switch switch-sm">

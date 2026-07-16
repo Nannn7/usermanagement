@@ -13,8 +13,10 @@ class UsermanagementDatabaseSeeder extends Seeder
     {
         $this->call([
             PermissionGroupSeeder::class,
-            RolesSeeder::class,
             PermissionsSeeder::class,
+            PositionsSeeder::class,
+            RolesSeeder::class,
+            RolePermissionSeeder::class,
             UsersSeeder::class,
         ]);
     }

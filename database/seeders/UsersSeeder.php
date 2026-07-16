@@ -4,8 +4,8 @@ namespace Modules\Usermanagement\Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Modules\Usermanagement\Models\Role;
 use Modules\Usermanagement\Models\User;
-use Modules\Usermanagement\Database\Seeders\RolesSeeder;
 
 class UsersSeeder extends Seeder
 {
@@ -30,12 +30,14 @@ class UsersSeeder extends Seeder
                     ]
                 );
 
-                $role = \Spatie\Permission\Models\Role::firstOrCreate(
-                    ['name' => $roleData['name']],
-                    ['guard_name' => 'web']
-                );
+                $role = Role::query()
+                    ->where('name', $roleData['name'])
+                    ->where('guard_name', $roleData['guard_name'])
+                    ->first();
 
-                $user->assignRole($role);
+                if ($role) {
+                    $user->assignRole($role);
+                }
             }
         }
     }

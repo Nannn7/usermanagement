@@ -3,9 +3,8 @@
     namespace Modules\Usermanagement\Database\Seeders;
 
     use Illuminate\Database\Seeder;
+    use Modules\Usermanagement\Models\Permission;
     use Modules\Usermanagement\Models\PermissionGroup;
-    use Spatie\Permission\Models\Permission;
-    use Spatie\Permission\Models\Role;
 
     class PermissionsSeeder extends Seeder
     {
@@ -14,52 +13,48 @@
          *
          * @return void
          */
-        public function run()
+        public function run(): void
         {
-            $data = $this->data();
+            foreach ($this->data() as $value) {
+                $permission = Permission::withTrashed()->updateOrCreate(
+                    [
+                        'name' => $value['name'],
+                        'guard_name' => $value['guard_name'],
+                    ],
+                    [
+                        'permission_group_id' => $value['group'],
+                    ]
+                );
 
-            foreach ($data as $value) {
-                $permission = Permission::updateOrCreate([
-                    'name'       => $value['name'],
-                    'guard_name' => 'web' // or 'api
-                ], [
-                    'permission_group_id' => $value['group']
-                ]);
-
-                $roles = Role::all();
-                foreach ($roles as $role) {
-                    $role->givePermissionTo($permission);
+                if ($permission->trashed()) {
+                    $permission->restore();
                 }
-
             }
         }
 
-        public function data()
+        public function data(): array
         {
             $data = [];
-            // list of model permission
-            $groups = PermissionGroup::all();
+            $groups = PermissionGroup::query()->orderBy('id')->get();
 
             foreach ($groups as $group) {
                 foreach ($this->crudActions($group->name) as $action) {
-                    $data[] = ['name' => $action, 'group' => $group->id];
+                    $data[] = [
+                        'name' => $action,
+                        'guard_name' => 'web',
+                        'group' => $group->id,
+                    ];
                 }
             }
 
             return $data;
         }
 
-        public function crudActions($name)
+        public function crudActions(string $name): array
         {
-            $actions = [];
-            // list of permission actions
-            $crud = ['create', 'read', 'update', 'delete','export', 'authorize', 'report','restore'];
-
-
-            foreach ($crud as $value) {
-                $actions[] = $name . '.' . $value;
-            }
-
-            return $actions;
+            return array_map(
+                static fn (string $value): string => $name . '.' . $value,
+                ['create', 'read', 'update', 'delete', 'export', 'authorize', 'report', 'restore']
+            );
         }
     }

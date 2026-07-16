@@ -15,6 +15,7 @@
             Schema::table('users', function (Blueprint $table) {
                 $table->string('nik')->nullable()->after('email');
                 $table->foreignIdFor(Branch::class)->nullable()->after('nik')->constrained('branches');
+                $table->string('sign')->nullable()->after('branch_id');
             });
         }
 
@@ -25,6 +26,7 @@
         : void
         {
             Schema::table('users', function (Blueprint $table) {
+                $table->dropColumn('sign');
                 $table->dropColumn('nik');
                 $table->dropForeign(['branch_id']);
                 $table->dropColumn('branch_id');

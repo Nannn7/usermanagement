@@ -7,7 +7,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Modules\Basicdata\Models\Branch;
-use Modules\Adk\Models\Appointment;
+use Modules\Corsec\Models\Directorate;
+use Modules\Corsec\Models\MeetingDecision;
+use Modules\Usermanagement\Models\Position;
 use Spatie\Permission\Traits\HasRoles;
 use Mattiverse\Userstamps\Traits\Userstamps;
 
@@ -43,6 +45,8 @@ class User extends Authenticatable
         'password',
         'nik',
         'branch_id',
+        'directorate_id',
+        'position_id',
         'profile_photo_path',
         'last_login_at',
         'last_login_ip',
@@ -83,6 +87,32 @@ class User extends Authenticatable
         return $this->belongsTo(Branch::class);
     }
 
+    public function branches()
+    {
+        return $this->belongsToMany(Branch::class, 'user_branches', 'user_id', 'branch_id');
+    }
+
+    public function directorate()
+    {
+        return $this->belongsTo(Directorate::class, 'directorate_id');
+    }
+
+    public function position()
+    {
+        return $this->belongsTo(Position::class, 'position_id');
+    }
+
+    public function supportedMeetingDecisions()
+    {
+        return $this->belongsToMany(
+            MeetingDecision::class,
+            'corsec_meeting_decision_support_users',
+            'user_id',
+            'meeting_decision_id'
+        );
+    }
+
+
     /**
      * Create a new factory instance for the model.
      *
@@ -91,15 +121,5 @@ class User extends Authenticatable
     protected static function newFactory()
     {
         return \Modules\Usermanagement\Database\Factories\UserFactory::new();
-    }
-
-    /**
-     * Get all of the appointments for the User
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function appointments()
-    {
-        return $this->hasMany(Appointment::class, 'admin_id');
     }
 }
