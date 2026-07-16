@@ -30,7 +30,7 @@
                     "path": "users",
                     "classes": "",
                     "attributes": [],
-                    "permission": "usermanagement.users.read",
+                    "permission": "usermanagement.read",
                     "roles": [
                         "administrator",
                         "admin siskon"
