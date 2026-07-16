@@ -14,65 +14,62 @@
     "menu": {
         "main": [],
         "master": [],
-        "system": [
-            {
-                "title": "User Management",
-                "path": "users",
-                "icon": "ki-filled ki-users text-lg text-primary",
-                "classes": "",
-                "attributes": [],
-                "permission": "",
-                "roles": [
-                    "administrator",
-                    "admin siskon"
-                ],
-                "sub": [
-                    {
-                        "title": "Users",
-                        "path": "users",
-                        "classes": "",
-                        "attributes": [],
-                        "permission": "",
-                        "roles": [
-                            "administrator",
-                            "admin siskon"
-                        ]
-                    },
-                    {
-                        "title": "Positions",
-                        "path": "users.positions",
-                        "classes": "",
-                        "attributes": [],
-                        "permission": "",
-                        "roles": [
-                            "administrator",
-                            "admin siskon"
-                        ]
-                    },
-                    {
-                        "title": "Roles",
-                        "path": "users.roles",
-                        "classes": "",
-                        "attributes": [],
-                        "permission": "",
-                        "roles": [
-                            "administrator",
-                            "admin siskon"
-                        ]
-                    },
-                    {
-                        "title": "Permissions",
-                        "path": "users.permissions",
-                        "classes": "",
-                        "attributes": [],
-                        "permission": "",
-                        "roles": [
-                            "administrator",
-                            "admin siskon"
-                        ]
-                    }
-                ]
-            }
-        ]
+        "system": [{
+            "title": "User Management",
+            "path": "users",
+            "icon": "ki-filled ki-users text-lg text-primary",
+            "classes": "",
+            "attributes": [],
+            "permission": "usermanagement.read",
+            "roles": [
+                "administrator",
+                "admin siskon"
+            ],
+            "sub": [{
+                    "title": "Users",
+                    "path": "users",
+                    "classes": "",
+                    "attributes": [],
+                    "permission": "usermanagement.users.read",
+                    "roles": [
+                        "administrator",
+                        "admin siskon"
+                    ]
+                },
+                {
+                    "title": "Positions",
+                    "path": "users.positions",
+                    "classes": "",
+                    "attributes": [],
+                    "permission": "usermanagement.read",
+                    "roles": [
+                        "administrator",
+                        "admin siskon"
+                    ]
+                },
+                {
+                    "title": "Roles",
+                    "path": "users.roles",
+                    "classes": "",
+                    "attributes": [],
+                    "permission": "usermanagement.read",
+                    "roles": [
+                        "administrator",
+                        "admin siskon"
+                    ]
+                },
+                {
+                    "title": "Permissions",
+                    "path": "users.permissions",
+                    "classes": "",
+                    "attributes": [],
+                    "permission": "usermanagement.read",
+                    "roles": [
+                        "administrator",
+                        "admin siskon"
+                    ]
+                }
+            ]
+        }]
     }
 }
