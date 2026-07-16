@@ -102,8 +102,10 @@
                 abort(403, 'Sorry! You are not allowed to create positions.');
             }
 
+            $nextCode = $this->nextPositionCode();
+
             // Return the view for creating a new position
-            return view('usermanagement::positions.create');
+            return view('usermanagement::positions.create', compact('nextCode'));
         }
 
         /**
@@ -170,7 +172,7 @@
          *
          * @return \Illuminate\Http\RedirectResponse
          */
-        public function destroy($id)
+        public function destroy(Request $request, $id)
         {
             // Check if the authenticated user has the required permission to delete positions
             if (is_null($this->user) || !$this->user->can('usermanagement.delete')) {
@@ -182,6 +184,13 @@
 
             // Check if the position has associated roles
             if ($position->roles()->exists()) {
+                if ($request->ajax() || $request->expectsJson()) {
+                    return response()->json([
+                        'message' => 'Cannot delete position because it has associated roles.',
+                        'success' => false,
+                    ], 422);
+                }
+
                 return redirect()->route('users.positions.index')
                                  ->with('error', 'Cannot delete position because it has associated roles.');
             }
@@ -190,10 +199,24 @@
                 // If no errors, delete the position from the database
                 $position->delete();
 
+                if ($request->ajax() || $request->expectsJson()) {
+                    return response()->json([
+                        'message' => 'Position deleted successfully.',
+                        'success' => true,
+                    ]);
+                }
+
                 // Redirect to the positions index page with a success message
                 return redirect()->route('users.positions.index')
                                  ->with('success', 'Position deleted successfully.');
             } catch (Exception $e) {
+                if ($request->ajax() || $request->expectsJson()) {
+                    return response()->json([
+                        'message' => 'An error occurred while deleting the position: ' . $e->getMessage(),
+                        'success' => false,
+                    ], 500);
+                }
+
                 // If an error occurs, redirect back with an error message
                 return redirect()->route('users.positions.index')
                                  ->with('error', 'An error occurred while deleting the position: ' . $e->getMessage());
@@ -283,5 +306,20 @@
             $search = $request->get('search');
 
             return Excel::download(new PositionExport($search), 'positions.xlsx');
+        }
+
+        /**
+         * Generate the next numeric position code using the current highest stored code.
+         */
+        private function nextPositionCode(): string
+        {
+            $numericCodes = Position::withTrashed()
+                ->pluck('code')
+                ->filter(fn ($code) => is_string($code) && preg_match('/^\d+$/', $code));
+
+            $width = max(3, (int) $numericCodes->map(fn ($code) => strlen($code))->max());
+            $maxCode = (int) $numericCodes->map(fn ($code) => (int) $code)->max();
+
+            return str_pad((string) ($maxCode + 1), $width, '0', STR_PAD_LEFT);
         }
     }

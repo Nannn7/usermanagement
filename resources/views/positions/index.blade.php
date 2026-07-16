@@ -76,7 +76,11 @@
 @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script type="text/javascript">
+        const positionDestroyUrlTemplate = @json(route('users.positions.destroy', ['position' => '__POSITION_ID__']));
+
         function deleteData(data) {
+            const deleteUrl = positionDestroyUrlTemplate.replace('__POSITION_ID__', data);
+
             Swal.fire({
                 title: 'Are you sure?',
                 text: "You won't be able to revert this!",
@@ -93,15 +97,16 @@
                         }
                     });
 
-                    $.ajax(`positions/${data}`, {
-                        type: 'DELETE'
+                    $.ajax(deleteUrl, {
+                        type: 'DELETE',
+                        dataType: 'json'
                     }).then((response) => {
                         swal.fire('Deleted!', 'Position has been deleted.', 'success').then(() => {
                             window.location.reload();
                         });
                     }).catch((error) => {
                         console.error('Error:', error);
-                        Swal.fire('Error!', 'An error occurred while deleting the position.', 'error');
+                        Swal.fire('Error!', error.responseJSON?.message || 'An error occurred while deleting the position.', 'error');
                     });
                 }
             })
@@ -110,6 +115,7 @@
     <script type="module">
         const element = document.querySelector('#positions-table');
         const searchInput = document.getElementById('search');
+        const positionEditUrlTemplate = @json(route('users.positions.edit', ['position' => '__POSITION_ID__']));
 
         const apiUrl = element.getAttribute('data-api-url');
         const dataTableOptions = {
@@ -138,8 +144,10 @@
                 actions: {
                     title: 'Status',
                     render: (item, data) => {
+                        const editUrl = positionEditUrlTemplate.replace('__POSITION_ID__', data.id);
+
                         return `<div class="flex flex-nowrap justify-center">
-                            <a class="btn btn-sm btn-icon btn-clear btn-info" href="positions/${data.id}/edit">
+                            <a class="btn btn-sm btn-icon btn-clear btn-info" href="${editUrl}">
                                 <i class="ki-outline ki-notepad-edit"></i>
                             </a>
                             <a onclick="deleteData(${data.id})" class="delete btn btn-sm btn-icon btn-clear btn-danger">

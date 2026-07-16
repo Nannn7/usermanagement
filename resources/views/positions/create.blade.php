@@ -27,7 +27,7 @@
                             Code
                         </label>
                         <div class="flex flex-wrap items-baseline w-full">
-                            <input class="input @error('code') border-danger @enderror" type="text" name="code" value="{{ $position->code ?? '' }}">
+                            <input class="input @error('code') border-danger @enderror" type="text" name="code" value="{{ old('code', $position->code ?? $nextCode ?? '') }}">
                             @error('code')
                             <em class="alert text-danger text-sm">{{ $message }}</em>
                             @enderror
@@ -38,7 +38,7 @@
                             Name
                         </label>
                         <div class="flex flex-wrap items-baseline w-full">
-                            <input class="input @error('name') border-danger @enderror" type="text" name="name" value="{{ $position->name ?? '' }}">
+                            <input class="input @error('name') border-danger @enderror" type="text" name="name" value="{{ old('name', $position->name ?? '') }}">
                             @error('name')
                             <em class="alert text-danger text-sm">{{ $message }}</em>
                             @enderror
@@ -49,7 +49,7 @@
                             Level
                         </label>
                         <div class="flex flex-wrap items-baseline w-full">
-                            <input class="input @error('level') border-danger @enderror" type="number" name="level" value="{{ $position->level ?? '' }}">
+                            <input class="input @error('level') border-danger @enderror" type="number" name="level" value="{{ old('level', $position->level ?? '') }}">
                             @error('level')
                             <em class="alert text-danger text-sm">{{ $message }}</em>
                             @enderror

@@ -23,7 +23,8 @@
                 "attributes": [],
                 "permission": "",
                 "roles": [
-                    "administrator"
+                    "administrator",
+                    "admin siskon"
                 ],
                 "sub": [
                     {
@@ -33,7 +34,8 @@
                         "attributes": [],
                         "permission": "",
                         "roles": [
-                            "administrator"
+                            "administrator",
+                            "admin siskon"
                         ]
                     },
                     {
@@ -43,7 +45,8 @@
                         "attributes": [],
                         "permission": "",
                         "roles": [
-                            "administrator"
+                            "administrator",
+                            "admin siskon"
                         ]
                     },
                     {
@@ -53,7 +56,8 @@
                         "attributes": [],
                         "permission": "",
                         "roles": [
-                            "administrator"
+                            "administrator",
+                            "admin siskon"
                         ]
                     },
                     {
@@ -63,7 +67,8 @@
                         "attributes": [],
                         "permission": "",
                         "roles": [
-                            "administrator"
+                            "administrator",
+                            "admin siskon"
                         ]
                     }
                 ]
