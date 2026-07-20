@@ -12,6 +12,8 @@ use Modules\Usermanagement\Models\Permission;
 use Modules\Usermanagement\Models\PermissionGroup;
 use Modules\Usermanagement\Models\Position;
 use Modules\Usermanagement\Models\Role;
+use Modules\Corsec\Models\ApprovalRequest;
+use Modules\Corsec\Services\ApprovalRequestService;
 use Exception;
 
 /**
@@ -27,6 +29,7 @@ class RolesController extends Controller
      * @var \Illuminate\Contracts\Auth\Authenticatable|null
      */
     protected $user;
+    private readonly ApprovalRequestService $approvalService;
 
     /**
      * UsersController constructor.
@@ -37,6 +40,7 @@ class RolesController extends Controller
     {
         // Mengatur middleware auth
         $this->middleware('auth');
+        $this->approvalService = app(ApprovalRequestService::class);
 
         // Mengatur user setelah middleware auth dijalankan
         $this->middleware(function ($request, $next) {
@@ -81,25 +85,18 @@ class RolesController extends Controller
 
         if ($validated) {
             try {
-                // If no errors, save the role to the database
-                $role = Role::create($validated);
-
-                $permissions = $request->input('permissions', []);
-                // $permissions = Permission::whereIn('id', $permissions)->pluck('name')->toArray();
-                if (!empty($permissions)) {
-                    $permissions = Permission::whereIn('id', $permissions)->pluck('name')->toArray();
-                    // $role = Role::find($role->id);
-                    try {
-                        $role->syncPermissions($permissions);
-                    } catch (Exception $e) {
-                        return redirect()
-                            ->route('users.roles.index')
-                            ->with('error', 'Failed to sync permissions: ' . $e->getMessage());
-                    }
-                }
+                $payload = $this->buildRoleApprovalPayload($request, $validated);
+                $this->approvalService->createRequest(
+                    Role::class,
+                    ApprovalRequest::ACTION_CREATE,
+                    null,
+                    $payload,
+                    null,
+                    'Pengajuan create role'
+                );
 
                 // Redirect back to the roles index with a success message
-                return redirect()->route('users.roles.index')->with('success', 'Role created successfully.');
+                return redirect()->route('users.roles.index')->with('success', 'Pengajuan role berhasil dikirim untuk approval.');
             } catch (Exception $e) {
                 // Redirect back to the roles index with an error message
                 return redirect()
@@ -186,23 +183,21 @@ class RolesController extends Controller
             try {
                 // If no errors, update the role in the database
                 $role = Role::findorFail($id);
-                $role->update($validated);
+                $payload = $this->buildRoleApprovalPayload($request, $validated);
+                $oldPayload = $role->only(array_keys(array_diff_key($payload, array_flip(['_permission_names']))));
+                $oldPayload['_permission_names'] = $role->permissions()->pluck('name')->values()->all();
 
-                $permissions = $request->input('permissions', []);
-                $permissions = !empty($permissions)
-                    ? Permission::whereIn('id', $permissions)->pluck('name')->toArray()
-                    : [];
-
-                try {
-                    $role->syncPermissions($permissions);
-                } catch (Exception $e) {
-                    return redirect()
-                        ->route('users.roles.index')
-                        ->with('error', 'Failed to sync permissions: ' . $e->getMessage());
-                }
+                $this->approvalService->createRequest(
+                    Role::class,
+                    ApprovalRequest::ACTION_UPDATE,
+                    (string) $role->id,
+                    $payload,
+                    $oldPayload,
+                    'Pengajuan update role'
+                );
 
                 // Redirect back to the roles index with a success message
-                return redirect()->route('users.roles.index')->with('success', 'Role updated successfully.');
+                return redirect()->route('users.roles.index')->with('success', 'Pengajuan perubahan role berhasil dikirim untuk approval.');
             } catch (Exception $e) {
                 // Redirect back to the roles index with an error message
                 return redirect()
@@ -359,5 +354,20 @@ class RolesController extends Controller
         }
 
         return Excel::download(new RolesExport, 'roles.xlsx');
+    }
+
+    private function buildRoleApprovalPayload(RoleRequest $request, array $validated): array
+    {
+        if (isset($validated['guard_names'])) {
+            $validated['guard_name'] = $validated['guard_names'];
+            unset($validated['guard_names']);
+        }
+
+        $permissionIds = array_filter((array) $request->input('permissions', []));
+        $validated['_permission_names'] = !empty($permissionIds)
+            ? Permission::whereIn('id', $permissionIds)->pluck('name')->values()->all()
+            : [];
+
+        return $validated;
     }
 }

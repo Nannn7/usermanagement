@@ -5,7 +5,10 @@
     use App\Http\Controllers\Controller;
     use Illuminate\Http\Request;
     use Illuminate\Support\Facades\Auth;
+    use Illuminate\Support\Str;
     use Maatwebsite\Excel\Facades\Excel;
+    use Modules\Corsec\Models\ApprovalRequest;
+    use Modules\Corsec\Services\ApprovalRequestService;
     use Modules\Usermanagement\Exports\PermissionExport;
     use Modules\Usermanagement\Http\Requests\PermissionRequest;
     use Modules\Usermanagement\Models\Permission;
@@ -25,6 +28,7 @@
          * @var \Illuminate\Contracts\Auth\Authenticatable|null
          */
         protected $user;
+        private readonly ApprovalRequestService $approvalService;
 
         /**
          * UsersController constructor.
@@ -35,6 +39,7 @@
         {
             // Mengatur middleware auth
             $this->middleware('auth');
+            $this->approvalService = app(ApprovalRequestService::class);
 
             // Mengatur user setelah middleware auth dijalankan
             $this->middleware(function ($request, $next) {
@@ -79,24 +84,17 @@
 
             if($validate){
                 try{
-                    $group = PermissionGroup::create($validate);
-                    $group_name = strtolower($validate['name']);
-                    $data       = [
-                        $group_name . '.create',
-                        $group_name . '.read',
-                        $group_name . '.update',
-                        $group_name . '.delete',
-                        $group_name . '.export',
-                        $group_name . '.authorize',
-                        $group_name . '.report',
-                        $group_name . '.restore'
-                    ];
+                    $payload = $this->buildPermissionGroupApprovalPayload($validate['name']);
+                    $this->approvalService->createRequest(
+                        PermissionGroup::class,
+                        ApprovalRequest::ACTION_CREATE,
+                        null,
+                        $payload,
+                        null,
+                        'Pengajuan create permission group'
+                    );
 
-                    foreach ($data as $permission) {
-                        Permission::create(['name' => $permission,'guard_name' => 'web', 'permission_group_id' => $group->id]);
-                    }
-
-                    return redirect()->route('users.permissions.index')->with('success', 'Permission created successfully.');
+                    return redirect()->route('users.permissions.index')->with('success', 'Pengajuan permission berhasil dikirim untuk approval.');
                 } catch (\Exception $e){
                     return redirect()->route('users.permissions.index')->with('error', 'Failed to create permission: '.$e->getMessage());
                 }
@@ -167,34 +165,25 @@
 
             if ($validated) {
                 try {
-                    // Process Data
                     $group       = PermissionGroup::find($id);
-                    $group->name = $request->name;
+                    $payload = $this->buildPermissionGroupApprovalPayload($validated['name']);
+                    $oldPayload = $group->only(['name', 'slug']);
+                    $oldPayload['_permission_names'] = Permission::where('permission_group_id', $group->id)
+                        ->orderBy('id')
+                        ->pluck('name')
+                        ->values()
+                        ->all();
 
-                    if ($group->save()) {
-                        $group_name  = strtolower($request->name);
-                        $permissions = Permission::where('permission_group_id', $group->id)->get();
+                    $this->approvalService->createRequest(
+                        PermissionGroup::class,
+                        ApprovalRequest::ACTION_UPDATE,
+                        (string) $group->id,
+                        $payload,
+                        $oldPayload,
+                        'Pengajuan update permission group'
+                    );
 
-                        $data = [
-                            $group_name . '.create',
-                            $group_name . '.read',
-                            $group_name . '.update',
-                            $group_name . '.delete',
-                            $group_name . '.export',
-                            $group_name . '.authorize',
-                            $group_name . '.report',
-                            $group_name . '.restore'
-                        ];
-
-                        $i = 0;
-                        foreach ($permissions as $permission) {
-                            $permission->name = $data[$i];
-                            $permission->save();
-
-                            $i++;
-                        }
-                    }
-                    return redirect()->route('users.permissions.index')->with('success', 'Permission updated successfully.');
+                    return redirect()->route('users.permissions.index')->with('success', 'Pengajuan perubahan permission berhasil dikirim untuk approval.');
                 } catch (\Exception $e) {
                     return redirect()->route('users.permissions.index')->with('error', 'Failed to update permission: '.$e->getMessage());
                 }
@@ -356,5 +345,25 @@
             }
 
             return Excel::download(new PermissionExport, 'permissions.xlsx');
+        }
+
+        private function buildPermissionGroupApprovalPayload(string $name): array
+        {
+            $groupName = strtolower($name);
+
+            return [
+                'name' => $name,
+                'slug' => Str::slug($name),
+                '_permission_names' => [
+                    $groupName . '.create',
+                    $groupName . '.read',
+                    $groupName . '.update',
+                    $groupName . '.delete',
+                    $groupName . '.export',
+                    $groupName . '.authorize',
+                    $groupName . '.report',
+                    $groupName . '.restore',
+                ],
+            ];
         }
     }

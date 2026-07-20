@@ -16,7 +16,9 @@
     use Modules\Usermanagement\Models\User;
     use Modules\Usermanagement\Models\Position;
     use Illuminate\Support\Facades\Storage;
+    use Modules\Corsec\Models\ApprovalRequest;
     use Modules\Corsec\Models\Directorate;
+    use Modules\Corsec\Services\ApprovalRequestService;
 
     /**
      * Class UsersController
@@ -31,6 +33,7 @@
          * @var \Illuminate\Contracts\Auth\Authenticatable|null
          */
         protected $user;
+        private readonly ApprovalRequestService $approvalService;
 
         /**
          * UsersController constructor.
@@ -41,6 +44,7 @@
         {
             // Mengatur middleware auth
             $this->middleware('auth');
+            $this->approvalService = app(ApprovalRequestService::class);
 
             // Mengatur user setelah middleware auth dijalankan
             $this->middleware(function ($request, $next) {
@@ -268,14 +272,18 @@
             $validated = $request->validated();
 
             if ($validated) {
-                $user = User::create($validated);
-                if ($user) {
-                    if ($request->roles) {
-                        $user->assignRole($request->roles);
-                    }
+                $payload = $this->buildUserApprovalPayload($request, $validated);
 
-                    return redirect()->route('users.index')->with('success', 'User created successfully.');
-                }
+                $this->approvalService->createRequest(
+                    User::class,
+                    ApprovalRequest::ACTION_CREATE,
+                    null,
+                    $payload,
+                    null,
+                    'Pengajuan create user'
+                );
+
+                return redirect()->route('users.index')->with('success', 'Pengajuan user berhasil dikirim untuk approval.');
             }
 
             return redirect()->route('users.create');
@@ -408,8 +416,8 @@
 
             if ($validated) {
                 try {
-                    $user = User::find($id);
-                    if ($request->hasFile('sign')) {
+                    $user = User::findOrFail($id);
+                    if ($user && $request->hasFile('sign')) {
                         $sign = $request->file('sign');
 
                         $signName = time() . '.' . $sign->getClientOriginalExtension();
@@ -421,17 +429,63 @@
 
                         $validated['sign'] = $signName;
                     }
-                    $user->update($validated);
-                    if ($request->roles) {
-                        $user->roles()->detach();
-                        $user->assignRole($request->roles);
-                    }
+                    $payload = $this->buildUserApprovalPayload($request, $validated);
+
+                    $oldPayload = $user->only(array_keys(array_diff_key($payload, array_flip(['_role_names']))));
+                    $oldPayload['_role_names'] = $user->roles()->pluck('name')->values()->all();
+
+                    $this->approvalService->createRequest(
+                        User::class,
+                        ApprovalRequest::ACTION_UPDATE,
+                        (string) $user->id,
+                        $payload,
+                        $oldPayload,
+                        'Pengajuan update user'
+                    );
                 } catch (Exception $e) {
                     return redirect()->back()->withErrors(['error' => 'Failed to update user. Please try again.']);
                 }
             }
 
-            return redirect()->route('users.index')->with('success', 'User updated successfully.');
+            return redirect()->route('users.index')->with('success', 'Pengajuan perubahan user berhasil dikirim untuk approval.');
+        }
+
+        private function buildUserApprovalPayload(UserRequest $request, array $validated): array
+        {
+            unset($validated['profile_photo_path']);
+            if ($request->hasFile('sign') && !is_string($validated['sign'] ?? null)) {
+                unset($validated['sign']);
+            }
+
+            $roles = array_values(array_filter((array) $request->input('roles', [])));
+            $validated['_role_names'] = $this->resolveRoleNames($roles);
+
+            return $validated;
+        }
+
+        private function resolveRoleNames(array $roles): array
+        {
+            if (empty($roles)) {
+                return [];
+            }
+
+            $numericRoleIds = array_values(array_filter($roles, fn ($role) => is_numeric($role)));
+            $roleNames = array_values(array_filter($roles, fn ($role) => !is_numeric($role)));
+
+            return Role::query()
+                ->where(function ($query) use ($numericRoleIds, $roleNames) {
+                    if (!empty($numericRoleIds)) {
+                        $query->whereIn('id', $numericRoleIds);
+                    }
+
+                    if (!empty($roleNames)) {
+                        $method = !empty($numericRoleIds) ? 'orWhereIn' : 'whereIn';
+                        $query->{$method}('name', $roleNames);
+                    }
+                })
+                ->pluck('name')
+                ->values()
+                ->all();
         }
 
     }

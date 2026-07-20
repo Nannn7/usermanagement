@@ -107,6 +107,22 @@ class PositionsControllerTest extends TestCase
     }
 
     #[Test]
+    public function create_position_form_prefills_next_code()
+    {
+        Position::create([
+            'code' => '018',
+            'name' => 'Latest Position',
+            'level' => 9
+        ]);
+
+        $response = $this->actingAs($this->user)
+            ->get(route('users.positions.create'));
+
+        $response->assertStatus(200);
+        $response->assertSee('value="019"', false);
+    }
+
+    #[Test]
     public function user_without_permission_cannot_create_position()
     {
         // Create a role with only read permission
@@ -236,6 +252,21 @@ class PositionsControllerTest extends TestCase
             ->delete(route('users.positions.destroy', $this->position->id));
 
         $response->assertRedirect(route('users.positions.index'));
+        $this->assertSoftDeleted($this->position);
+    }
+
+    #[Test]
+    public function user_with_permission_can_delete_position_via_ajax()
+    {
+        $response = $this->actingAs($this->user)
+            ->withHeader('X-Requested-With', 'XMLHttpRequest')
+            ->delete(route('users.positions.destroy', $this->position->id));
+
+        $response->assertOk();
+        $response->assertJson([
+            'message' => 'Position deleted successfully.',
+            'success' => true,
+        ]);
         $this->assertSoftDeleted($this->position);
     }
 

@@ -158,7 +158,7 @@
 
                                     <div class="flex flex-wrap items-baseline w-full">
                                         <div class="input @error('password') border-danger @enderror" data-toggle-password="true" data-toggle-password-permanent="true">
-                                            <input placeholder="Password" type="password" name="password"/>
+                                            <input placeholder="Password (Min : 8 Digit, Must Contains 1 Capital (A-a), Contains Number (0-9), Contains Symbol (!,@,*))" type="password" name="password"/>
                                             <div class="btn btn-icon" data-toggle-password-trigger="true">
                                                 <i class="ki-outline ki-eye toggle-password-active:hidden"></i>
                                                 <i class="ki-outline ki-eye-slash hidden toggle-password-active:block"></i>
