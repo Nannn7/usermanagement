@@ -205,15 +205,26 @@
                 return response()->json(['message' => 'Sorry! You are not allowed to delete permissions.','success' => false]);
             }
 
-            $permission = PermissionGroup::find($id);
-            if (!is_null($permission)) {
-                if ($permission->delete()) {
-                    Permission::where('permission_group_id', $id)->delete();
-                }
+            $permission = PermissionGroup::findOrFail($id);
+
+            try {
+                $oldPayload = $permission->only(['name', 'slug']);
+                $oldPayload['_permission_names'] = Permission::where('permission_group_id', $id)->pluck('name')->values()->all();
+
+                $this->approvalService->createRequest(
+                    PermissionGroup::class,
+                    ApprovalRequest::ACTION_DELETE,
+                    (string) $permission->id,
+                    [],
+                    $oldPayload,
+                    'Pengajuan delete permission group: ' . $permission->name
+                );
+            } catch (\Exception $e) {
+                return response()->json(['message' => 'Failed to submit delete request.', 'success' => false], 500);
             }
 
             // Redirect back to the permissions index with a success message
-            return response()->json(['message' => 'Permission deleted successfully.','success' => true]);
+            return response()->json(['message' => 'Pengajuan hapus permission berhasil dikirim untuk approval.', 'success' => true]);
         }
 
         /**

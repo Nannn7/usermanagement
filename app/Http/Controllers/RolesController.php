@@ -225,12 +225,22 @@ class RolesController extends Controller
 
         try {
             // Delete from database
-            $currency = Role::findorFail($id);
-            $currency->delete();
+            $role = Role::findorFail($id);
+            $oldPayload = $role->only(['name', 'position_id']);
+            $oldPayload['_permission_names'] = $role->permissions()->pluck('name')->values()->all();
 
-            return response()->json(['success' => true, 'message' => 'Role deleted successfully.']);
+            $this->approvalService->createRequest(
+                Role::class,
+                ApprovalRequest::ACTION_DELETE,
+                (string) $role->id,
+                [],
+                $oldPayload,
+                'Pengajuan delete role: ' . $role->name
+            );
+
+            return response()->json(['success' => true, 'message' => 'Pengajuan hapus role berhasil dikirim untuk approval.']);
         } catch (Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Failed to delete role.']);
+            return response()->json(['success' => false, 'message' => 'Failed to submit delete request.']);
         }
     }
 
