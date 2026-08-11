@@ -84,6 +84,7 @@
             Swal.fire({
                 title: 'Are you sure?',
                 text: "You won't be able to revert this!",
+<<<<<<< HEAD
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#3085d6',
@@ -97,6 +98,21 @@
                         }
                     });
 
+=======
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajaxSetup({
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        }
+                    });
+
+>>>>>>> b221050f45210fa2b4011fc6874d69ea79756aa8
                     $.ajax(deleteUrl, {
                         type: 'DELETE',
                         dataType: 'json'
@@ -116,6 +132,7 @@
         const element = document.querySelector('#positions-table');
         const searchInput = document.getElementById('search');
         const positionEditUrlTemplate = @json(route('users.positions.edit', ['position' => '__POSITION_ID__']));
+<<<<<<< HEAD
 
         const apiUrl = element.getAttribute('data-api-url');
         const dataTableOptions = {
@@ -141,6 +158,33 @@
                 level: {
                     title: 'Level',
                 },
+=======
+
+        const apiUrl = element.getAttribute('data-api-url');
+        const dataTableOptions = {
+            apiEndpoint: apiUrl,
+            pageSize: 5,
+            columns: {
+                select: {
+                    render: (item, data, context) => {
+                        const checkbox = document.createElement('input');
+                        checkbox.className = 'checkbox checkbox-sm';
+                        checkbox.type = 'checkbox';
+                        checkbox.value = data.id.toString();
+                        checkbox.setAttribute('data-datatable-row-check', 'true');
+                        return checkbox.outerHTML.trim();
+                    },
+                },
+                code: {
+                    title: 'Code',
+                },
+                name: {
+                    title: 'Name',
+                },
+                level: {
+                    title: 'Level',
+                },
+>>>>>>> b221050f45210fa2b4011fc6874d69ea79756aa8
                 actions: {
                     title: 'Status',
                     render: (item, data) => {

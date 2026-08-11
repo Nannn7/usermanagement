@@ -232,6 +232,13 @@
                     ]);
                 }
 
+                if ($request->ajax() || $request->expectsJson()) {
+                    return response()->json([
+                        'message' => 'Position deleted successfully.',
+                        'success' => true,
+                    ]);
+                }
+
                 // Redirect to the positions index page with a success message
                 return redirect()->route('users.positions.index')
                                  ->with('success', 'Pengajuan hapus position berhasil dikirim untuk approval.');

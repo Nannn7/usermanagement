@@ -83,6 +83,7 @@
 $isLegacyCorsec = $group->name === 'corsec';
 $groupPermissions = $group->getpermissionsByGroupId($group->id);
 if ($isLegacyCorsec) {
+<<<<<<< HEAD
     // "Approval Requests" only needs 2 of the 8 standard CRUD actions:
     // - authorize: process (approve/reject) requests - the approver/checker worklist
     // - read: view-only access to the same list/detail, for a maker who just
@@ -127,12 +128,20 @@ $hasStageActions = $groupPermissions->contains(
                                     true,
                                 ),
                             );
+=======
+    $groupPermissions = $groupPermissions->filter(
+        fn($permission) => str_ends_with($permission->name, '.authorize'),
+    );
+}
+$groupLabel = $isLegacyCorsec ? 'Approval Requests' : ucwords($group->name);
+>>>>>>> b221050f45210fa2b4011fc6874d69ea79756aa8
                         @endphp
                         @if ($groupPermissions->isNotEmpty())
                             <div class="flex items-baseline flex-wrap lg:flex-nowrap gap-2.5 permission-group">
                                 <label class="form-label max-w-56">
                                     {{ $groupLabel }}
                                 </label>
+<<<<<<< HEAD
                                 <div class="flex flex-col gap-1 w-full">
                                     <div class="flex flex-wrap items-baseline w-full gap-2.5">
                                         <label class="switch switch-sm">
@@ -182,6 +191,33 @@ $hasStageActions = $groupPermissions->contains(
                                             cuma perlu memantau status, dan Authorize untuk approver/checker.
                                         </div>
                                     @endif
+=======
+                                <div class="flex flex-wrap items-baseline w-full gap-2.5">
+                                    <label class="switch switch-sm">
+                                        <input type="checkbox" class="permission-group-select-all" />
+                                        <span class="switch-label text-primary">
+                                            Select All
+                                        </span>
+                                    </label>
+                                    @foreach ($groupPermissions as $permission)
+                                        <label class="switch">
+                                            @if (isset($role))
+                                                <input type="checkbox" value="{{ $permission->id }}" name="permissions[]"
+                                                    {{ $role->hasPermissionTo($permission->name) ? 'checked' : null }} />
+                                            @else
+                                                <input type="checkbox" value="{{ $permission->id }}"
+                                                    name="permissions[]" />
+                                            @endif
+                                            @php
+                                                $permission_name = explode('.', $permission->name);
+                                            @endphp
+
+                                            <span class="switch-label">
+                                                {{ ucwords($permission_name[1]) }}
+                                            </span>
+                                        </label>
+                                    @endforeach
+>>>>>>> b221050f45210fa2b4011fc6874d69ea79756aa8
                                 </div>
                             </div>
                         @endif
