@@ -220,17 +220,43 @@
          * @return \Illuminate\Http\RedirectResponse
          * @throws \Illuminate\Auth\Access\AuthorizationException
          */
+        // public function destroy($id)
+        // {
+        //     if (is_null($this->user) || !$this->user->can('usermanagement.delete')) {
+        //         return response()->json(['message' => 'Sorry! You are not allowed to delete users.','success' => false], 403);
+        //     }
+
+        //     $user = User::find($id);
+        //     $user->delete();
+
+        //     return response()->json(['message' => 'User deleted successfully.', 'success' => true]);
+        // }
         public function destroy($id)
         {
             if (is_null($this->user) || !$this->user->can('usermanagement.delete')) {
                 return response()->json(['message' => 'Sorry! You are not allowed to delete users.','success' => false], 403);
             }
+ 
+            $user = User::findOrFail($id);
 
-            $user = User::find($id);
-            $user->delete();
+            try {
+                $oldPayload = $user->only(['name', 'email', 'nik', 'directorate_id', 'branch_id', 'position_id']);
+                $oldPayload['_role_names'] = $user->roles()->pluck('name')->values()->all();
 
-            return response()->json(['message' => 'User deleted successfully.', 'success' => true]);
-        }
+                $this->approvalService->createRequest(
+                    User::class,
+                    ApprovalRequest::ACTION_DELETE,
+                    (string) $user->id,
+                    [],
+                    $oldPayload,
+                    'Pengajuan delete user: ' . $user->name
+                );
+            } catch (Exception $e) {
+                return response()->json(['message' => 'Failed to submit delete request. Please try again.', 'success' => false], 500);
+            }
+ 
+            return response()->json(['message' => 'Pengajuan hapus user berhasil dikirim untuk approval.', 'success' => true]);
+         }
 
         /**
          * Restore the specified resource from storage.

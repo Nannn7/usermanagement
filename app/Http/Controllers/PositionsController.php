@@ -213,7 +213,24 @@
 
             try {
                 // If no errors, delete the position from the database
-                $position->delete();
+                // $position->delete();
+                $oldPayload = $position->only(['code', 'name', 'level']);
+
+                $this->approvalService->createRequest(
+                    Position::class,
+                    ApprovalRequest::ACTION_DELETE,
+                    (string) $position->id,
+                    [],
+                    $oldPayload,
+                    'Pengajuan delete position: ' . $position->name
+                );
+
+                if ($request->ajax() || $request->expectsJson()) {
+                    return response()->json([
+                        'message' => 'Pengajuan hapus position berhasil dikirim untuk approval.',
+                        'success' => true,
+                    ]);
+                }
 
                 if ($request->ajax() || $request->expectsJson()) {
                     return response()->json([
@@ -224,7 +241,7 @@
 
                 // Redirect to the positions index page with a success message
                 return redirect()->route('users.positions.index')
-                                 ->with('success', 'Position deleted successfully.');
+                                 ->with('success', 'Pengajuan hapus position berhasil dikirim untuk approval.');
             } catch (Exception $e) {
                 if ($request->ajax() || $request->expectsJson()) {
                     return response()->json([

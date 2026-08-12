@@ -61,7 +61,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Ticking (or unticking) any single action checkbox by hand keeps
+<<<<<<< HEAD
         // this row's "Select All" — and the master switch — honest.
+=======
+        // this row's "Select All" â€” and the master switch â€” honest.
+>>>>>>> b221050f45210fa2b4011fc6874d69ea79756aa8
         actionCheckboxes(group).forEach((checkbox) => {
             checkbox.addEventListener('change', () => {
                 syncGroupSelectAll(group);
@@ -90,4 +94,8 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
     }
+<<<<<<< HEAD
 });
+=======
+});
+>>>>>>> b221050f45210fa2b4011fc6874d69ea79756aa8
