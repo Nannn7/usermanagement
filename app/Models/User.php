@@ -50,7 +50,9 @@ class User extends Authenticatable
         'profile_photo_path',
         'last_login_at',
         'last_login_ip',
-        'sign'
+        'sign',
+        'must_change_password',
+        'password_changed_at',
     ];
 
     /**
@@ -79,6 +81,8 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password'          => 'hashed',
             'id'                => 'string',
+            'must_change_password' => 'boolean',
+            'password_changed_at'  => 'datetime',
         ];
     }
 
