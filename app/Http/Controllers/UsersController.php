@@ -8,6 +8,7 @@
     use Illuminate\Support\Facades\Auth;
     use Illuminate\Support\Facades\Hash;
     use Illuminate\Support\Facades\Validator;
+    use Illuminate\Validation\Rules\Password;
     use Maatwebsite\Excel\Facades\Excel;
     use Modules\Basicdata\Models\Branch;
     use Modules\Usermanagement\Exports\UsersExport;
@@ -402,7 +403,7 @@
         {
             $validator = Validator::make($request->all(), [
                 'current_password' => 'required',
-                'password'         => 'required|string|min:8|confirmed',
+                'password'         => ['required', 'confirmed', Password::min(8)->mixedCase()->numbers()->symbols()],
             ], [
                 'password_confirmation' => 'The new password confirmation does not match.',
             ]);
@@ -417,7 +418,13 @@
                 return back()->withErrors(['current_password' => 'The current password is incorrect.']);
             }
 
+            if (Hash::check($request->password, $user->password)) {
+                return back()->withErrors(['password' => 'The new password must be different from the current password.'])->withInput();
+            }
+
             $user->password = Hash::make($request->password);
+            $user->must_change_password = false;
+            $user->password_changed_at = now();
             $user->save();
 
             return redirect()->route('users.profile')->with('success', 'Password changed successfully.');
