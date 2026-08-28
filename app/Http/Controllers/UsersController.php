@@ -362,6 +362,35 @@
             return view('usermanagement::users.profile', compact('user'));
         }
 
+        public function showSignature($id)
+        {
+            $user = User::findOrFail($id);
+
+            $isOwner = $this->user && (int) $this->user->id === (int) $user->id;
+            $canReadAny = $this->user && $this->user->can('usermanagement.read');
+
+            if (!$isOwner && !$canReadAny) {
+                abort(403, 'Anda tidak memiliki akses untuk melihat tanda tangan ini.');
+            }
+
+            if (!$user->sign) {
+                abort(404, 'Tanda tangan tidak ditemukan.');
+            }
+
+            $path = 'signatures/' . $user->id . '/' . $user->sign;
+            $disk = Storage::disk('private');
+
+            if (!$disk->exists($path)) {
+                abort(404, 'Tanda tangan tidak ditemukan.');
+            }
+
+            return response()->file($disk->path($path), [
+                'Content-Type' => $disk->mimeType($path) ?: 'application/octet-stream',
+                'Cache-Control' => 'private, no-store, no-cache, must-revalidate',
+                'X-Content-Type-Options' => 'nosniff',
+            ]);
+        }
+
         public function updateProfile(Request $request)
         {
             $user = Auth::user();
@@ -380,17 +409,15 @@
             if ($request->hasFile('sign')) {
                 // Delete old e-sign if exists
                 if ($user->sign) {
-                    Storage::disk('public')->delete('signatures/' . $user->id . '/' . $user->sign);
+                    Storage::disk('private')->delete('signatures/' . $user->id . '/' . $user->sign);
                 }
 
                 $sign     = $request->file('sign');
                 $signName = time() . '.' . $sign->getClientOriginalExtension();
 
-                // Make sure the directory exists
-                Storage::disk('public')->makeDirectory('signatures/' . $user->id);
+                Storage::disk('private')->makeDirectory('signatures/' . $user->id);
+                $sign->storeAs('signatures/' . $user->id, $signName, 'private');
 
-                // Store the file
-                $sign->storeAs('signatures/' . $user->id, $signName, 'public');
                 $user->sign = $signName;
             }
 
@@ -456,8 +483,9 @@
                         $signName = time() . '.' . $sign->getClientOriginalExtension();
 
                         $sign->storeAs(
-                            'public/signatures/' . $user->id . '/',
+                            'signatures/' . $user->id . '/',
                             $signName,
+                            'private',
                         );
 
                         $validated['sign'] = $signName;

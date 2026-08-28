@@ -102,9 +102,9 @@
                                 @if(Auth::user()->sign)
                                     <div class="mt-2">
                                         <p>Current E-Sign:</p>
-                                        <img src="{{ asset('storage/signatures/' . Auth::user()->id . '/' . Auth::user()->sign) }}"
-                                             alt="E-Sign"
-                                             class="mt-2 max-w-xs border border-gray-200 rounded">
+                                        <img src="{{ route('users.signature', Auth::user()->id) }}"
+                                              alt="E-Sign"
+                                              class="mt-2 max-w-xs border border-gray-200 rounded">
                                     </div>
                                 @endif
 
