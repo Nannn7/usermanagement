@@ -27,6 +27,7 @@
             Route::put('/profile/change-password', [UsersController::class, 'changePassword'])->name(
                 'change-password',
             );
+            Route::get('{user}/signature', [UsersController::class, 'showSignature'])->name('signature');
         });
         Route::resource('users', UsersController::class);
 

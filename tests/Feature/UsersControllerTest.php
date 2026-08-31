@@ -414,7 +414,7 @@ class UsersControllerTest extends TestCase
         $file = UploadedFile::fake()->image('new-signature.jpg');
 
         // Create a fake old signature file in storage
-        Storage::disk('public')->put(
+        Storage::disk('private')->put(
             'signatures/' . $this->user->id . '/old-signature.jpg',
             'fake content'
         );
@@ -456,11 +456,15 @@ class UsersControllerTest extends TestCase
         // Use a more flexible check that doesn't rely on the exact filename
         $signaturePath = 'signatures/' . $this->user->id;
         $this->assertTrue(
-            Storage::disk('public')->exists($signaturePath . '/' . $this->user->sign),
-            "Signature file not found at expected location: {$signaturePath}/{$this->user->sign}"
+            Storage::disk('private')->exists($signaturePath . '/' . $this->user->sign),
+             "Signature file not found at expected location: {$signaturePath}/{$this->user->sign}"
         );
 
         // Verify old signature was deleted
-        Storage::disk('public')->assertMissing('signatures/' . $this->user->id . '/old-signature.jpg');
+        Storage::disk('private')->assertMissing('signatures/' . $this->user->id . '/old-signature.jpg');
+
+        $this->actingAs($this->user)->get(route('users.signature', $this->user->id))->assertOk();
+        
+        $this->get(route('users.signature', $this->user->id))->assertRedirect(route('login'));  
     }
 }
