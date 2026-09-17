@@ -8,6 +8,7 @@
     use Illuminate\Support\Facades\Auth;
     use Illuminate\Support\Facades\Hash;
     use Illuminate\Support\Facades\Validator;
+    use Illuminate\Validation\Rules\Password;
     use Maatwebsite\Excel\Facades\Excel;
     use Modules\Basicdata\Models\Branch;
     use Modules\Usermanagement\Exports\UsersExport;
@@ -361,14 +362,43 @@
             return view('usermanagement::users.profile', compact('user'));
         }
 
+        public function showSignature($id)
+        {
+            $user = User::findOrFail($id);
+
+            $isOwner = $this->user && (int) $this->user->id === (int) $user->id;
+            $canReadAny = $this->user && $this->user->can('usermanagement.read');
+
+            if (!$isOwner && !$canReadAny) {
+                abort(403, 'Anda tidak memiliki akses untuk melihat tanda tangan ini.');
+            }
+
+            if (!$user->sign) {
+                abort(404, 'Tanda tangan tidak ditemukan.');
+            }
+
+            $path = 'signatures/' . $user->id . '/' . $user->sign;
+            $disk = Storage::disk('private');
+
+            if (!$disk->exists($path)) {
+                abort(404, 'Tanda tangan tidak ditemukan.');
+            }
+
+            return response()->file($disk->path($path), [
+                'Content-Type' => $disk->mimeType($path) ?: 'application/octet-stream',
+                'Cache-Control' => 'private, no-store, no-cache, must-revalidate',
+                'X-Content-Type-Options' => 'nosniff',
+            ]);
+        }
+
         public function updateProfile(Request $request)
         {
             $user = Auth::user();
 
             $validatedData = $request->validate([
                 'name'  => 'required|string|max:255',
-                'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
-                'nik'   => 'nullable|string|max:6|unique:users,nik,' . $user->id,
+                'email' => ['required', 'string', 'email', 'max:255', \Illuminate\Validation\Rule::unique('users', 'email')->ignore($user->id)->whereNull('deleted_at')],
+                'nik'   => ['nullable', 'string', 'max:6', \Illuminate\Validation\Rule::unique('users', 'nik')->ignore($user->id)->whereNull('deleted_at')],
                 'sign'  => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             ]);
 
@@ -379,17 +409,15 @@
             if ($request->hasFile('sign')) {
                 // Delete old e-sign if exists
                 if ($user->sign) {
-                    Storage::disk('public')->delete('signatures/' . $user->id . '/' . $user->sign);
+                    Storage::disk('private')->delete('signatures/' . $user->id . '/' . $user->sign);
                 }
 
                 $sign     = $request->file('sign');
                 $signName = time() . '.' . $sign->getClientOriginalExtension();
 
-                // Make sure the directory exists
-                Storage::disk('public')->makeDirectory('signatures/' . $user->id);
+                Storage::disk('private')->makeDirectory('signatures/' . $user->id);
+                $sign->storeAs('signatures/' . $user->id, $signName, 'private');
 
-                // Store the file
-                $sign->storeAs('signatures/' . $user->id, $signName, 'public');
                 $user->sign = $signName;
             }
 
@@ -402,7 +430,7 @@
         {
             $validator = Validator::make($request->all(), [
                 'current_password' => 'required',
-                'password'         => 'required|string|min:8|confirmed',
+                'password'         => ['required', 'confirmed', Password::min(8)->mixedCase()->numbers()->symbols()],
             ], [
                 'password_confirmation' => 'The new password confirmation does not match.',
             ]);
@@ -417,7 +445,13 @@
                 return back()->withErrors(['current_password' => 'The current password is incorrect.']);
             }
 
+            if (Hash::check($request->password, $user->password)) {
+                return back()->withErrors(['password' => 'The new password must be different from the current password.'])->withInput();
+            }
+
             $user->password = Hash::make($request->password);
+            $user->must_change_password = false;
+            $user->password_changed_at = now();
             $user->save();
 
             return redirect()->route('users.profile')->with('success', 'Password changed successfully.');
@@ -449,8 +483,9 @@
                         $signName = time() . '.' . $sign->getClientOriginalExtension();
 
                         $sign->storeAs(
-                            'public/signatures/' . $user->id . '/',
+                            'signatures/' . $user->id . '/',
                             $signName,
+                            'private',
                         );
 
                         $validated['sign'] = $signName;

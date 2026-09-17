@@ -31,9 +31,9 @@ class PositionRequest extends FormRequest
         ];
 
         if ($this->method() === 'PUT') {
-            $rules['code'] = 'required|string|unique:positions,code,' . $positionId;
+            $rules['code'] = ['required', 'string', \Illuminate\Validation\Rule::unique('positions', 'code')->ignore($positionId)->whereNull('deleted_at')];
         } else {
-            $rules['code'] = 'required|string|unique:positions,code';
+            $rules['code'] = ['required', 'string', \Illuminate\Validation\Rule::unique('positions', 'code')->whereNull('deleted_at')];
         }
 
         return $rules;

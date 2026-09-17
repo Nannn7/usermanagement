@@ -4,6 +4,7 @@ namespace Modules\Usermanagement\Providers;
 
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
+use Modules\Usermanagement\Console\MigrateSignaturesToPrivateDiskCommand;
 
 class UsermanagementServiceProvider extends ServiceProvider
 {
@@ -42,7 +43,9 @@ class UsermanagementServiceProvider extends ServiceProvider
      */
     protected function registerCommands(): void
     {
-        // $this->commands([]);
+        $this->commands([
+            MigrateSignaturesToPrivateDiskCommand::class,
+        ]);
     }
 
     /**

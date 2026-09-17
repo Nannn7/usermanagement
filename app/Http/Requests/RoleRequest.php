@@ -28,9 +28,9 @@
             ];
 
             if ($this->method() === 'PUT') {
-                $rules['name'] = 'required|string|max:255|unique:roles,name,' . $roleId;
+                $rules['name'] = ['required', 'string', 'max:255', \Illuminate\Validation\Rule::unique('roles', 'name')->ignore($roleId)->whereNull('deleted_at')];
             } else {
-                $rules['name'] = 'required|string|max:255|unique:roles,name';
+                $rules['name'] = ['required', 'string', 'max:255', \Illuminate\Validation\Rule::unique('roles', 'name')->whereNull('deleted_at')];
             }
 
             return $rules;

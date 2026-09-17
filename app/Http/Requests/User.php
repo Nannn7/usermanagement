@@ -43,11 +43,11 @@ class User extends FormRequest
         }
 
         if ($this->method() === 'PUT') {
-            $rules['email'] = 'required|email|unique:users,email,' . $userId;
-            $rules['nik']   = 'nullable|string|max:6|unique:users,nik,' . $userId;
+            $rules['email'] = ['required', 'email', \Illuminate\Validation\Rule::unique('users', 'email')->ignore($userId)->whereNull('deleted_at')];
+            $rules['nik']   = ['nullable', 'string', 'max:6', \Illuminate\Validation\Rule::unique('users', 'nik')->ignore($userId)->whereNull('deleted_at')];
         } else {
-            $rules['email'] = 'required|email|unique:users,email';
-            $rules['nik']   = 'nullable|string|max:6|unique:users,nik';
+            $rules['email'] = ['required', 'email', \Illuminate\Validation\Rule::unique('users', 'email')->whereNull('deleted_at')];
+            $rules['nik']   = ['nullable', 'string', 'max:6', \Illuminate\Validation\Rule::unique('users', 'nik')->whereNull('deleted_at')];
         }
 
         return $rules;
