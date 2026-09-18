@@ -165,7 +165,6 @@
                         Password
                     </label>
 
-<<<<<<< HEAD
                                     <div class="flex flex-wrap items-baseline w-full">
                                         <div class="input @error('password') border-danger @enderror" data-toggle-password="true" data-toggle-password-permanent="true">
                                             <input placeholder="Password (Min : 8 Digit, Must Contains 1 Capital (A-a), Contains Number (0-9), Contains Symbol (!,@,*))" type="password" name="password"/>
@@ -248,17 +247,6 @@
                                         Save
                                     </button>
                                 </div>
-=======
-                    <div class="flex flex-wrap items-baseline w-full">
-                        <div class="input @error('password') border-danger @enderror" data-toggle-password="true"
-                            data-toggle-password-permanent="true">
-                            <input
-                                placeholder="Password (Min : 8 Digit, Must Contains 1 Capital, Contains Number, Contains Symbol (!,@,*))"
-                                type="password" name="password" />
-                            <div class="btn btn-icon" data-toggle-password-trigger="true">
-                                <i class="ki-outline ki-eye toggle-password-active:hidden"></i>
-                                <i class="ki-outline ki-eye-slash hidden toggle-password-active:block"></i>
->>>>>>> b221050f45210fa2b4011fc6874d69ea79756aa8
                             </div>
                         </div>
                         @error('password')

@@ -397,8 +397,8 @@
 
             $validatedData = $request->validate([
                 'name'  => 'required|string|max:255',
-                'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
-                'nik'   => 'nullable|string|max:6|unique:users,nik,' . $user->id,
+                'email' => ['required', 'string', 'email', 'max:255', \Illuminate\Validation\Rule::unique('users', 'email')->ignore($user->id)->whereNull('deleted_at')],
+                'nik'   => ['nullable', 'string', 'max:6', \Illuminate\Validation\Rule::unique('users', 'nik')->ignore($user->id)->whereNull('deleted_at')],
                 'sign'  => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             ]);
 
