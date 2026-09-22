@@ -78,16 +78,15 @@
                             // now have their own dedicated groups below, so every
                             // action here EXCEPT "authorize" is redundant with them.
                             // "corsec.authorize" is kept and relabeled: it's the one
-// that actually drives the "Approval Requests" menu
-// (see ApproverController::@can('corsec.authorize')).
-$isLegacyCorsec = $group->name === 'corsec';
-$groupPermissions = $group->getpermissionsByGroupId($group->id);
-if ($isLegacyCorsec) {
-<<<<<<< HEAD
-    // "Approval Requests" only needs 2 of the 8 standard CRUD actions:
-    // - authorize: process (approve/reject) requests - the approver/checker worklist
-    // - read: view-only access to the same list/detail, for a maker who just
-    //   needs to check their own request's status (no approve/reject ability)
+                            // that actually drives the "Approval Requests" menu
+                            // (see ApproverController::@can('corsec.authorize')).
+                            $isLegacyCorsec = $group->name === 'corsec';
+                            $groupPermissions = $group->getpermissionsByGroupId($group->id);
+                            if ($isLegacyCorsec) {
+                                // "Approval Requests" only needs 2 of the 8 standard CRUD actions:
+                                // - authorize: process (approve/reject) requests - the approver/checker worklist
+                                // - read: view-only access to the same list/detail, for a maker who just
+                                //   needs to check their own request's status (no approve/reject ability)
                                 $groupPermissions = $groupPermissions->filter(
                                     fn($permission) => in_array(
                                         explode('.', $permission->name)[1] ?? '',
@@ -100,48 +99,40 @@ if ($isLegacyCorsec) {
 
                             // Presentational-only label/tooltip overrides for permission slugs that
                             // aren't self-explanatory to an admin building/editing a role (e.g. the
-// raw "Maker_action" checkbox). This never changes the permission id/name
-// submitted to the server - only how it is displayed here.
-$actionDisplayLabels = [
-    'maker_action' => 'Maker',
-    'checker_action' => 'Checker',
-    'approver_action' => 'Approver',
-];
-$actionTooltips = [
-    'maker_action' =>
-        'Boleh membuat/mengajukan (originate) dokumen pada tahap awal alur approval modul ini.',
-    'checker_action' =>
-        'Boleh melakukan pemeriksaan/verifikasi tahap pertama, sebelum diteruskan ke Approver.',
-    'approver_action' => 'Boleh melakukan approval/persetujuan final pada tahap ini.',
-    'authorize' => $isLegacyCorsec
-        ? 'Memproses (approve/reject) pengajuan yang masuk ke menu Approval Requests.'
-        : 'Boleh melakukan approval/persetujuan pada modul ini.',
-    'read' => $isLegacyCorsec
-        ? 'Hanya bisa membuka menu Approval Requests untuk melihat daftar & status pengajuan (read-only) - tidak ada tombol Setujui/Tolak. Cocok untuk role maker yang perlu memantau status pengajuannya sendiri.'
-        : null,
-];
+                            // raw "Maker_action" checkbox). This never changes the permission id/name
+                            // submitted to the server - only how it is displayed here.
+                            $actionDisplayLabels = [
+                                'maker_action' => 'Maker',
+                                'checker_action' => 'Checker',
+                                'approver_action' => 'Approver',
+                            ];
+                            $actionTooltips = [
+                                'maker_action' =>
+                                    'Boleh membuat/mengajukan (originate) dokumen pada tahap awal alur approval modul ini.',
+                                'checker_action' =>
+                                    'Boleh melakukan pemeriksaan/verifikasi tahap pertama, sebelum diteruskan ke Approver.',
+                                'approver_action' => 'Boleh melakukan approval/persetujuan final pada tahap ini.',
+                                'authorize' => $isLegacyCorsec
+                                    ? 'Memproses (approve/reject) pengajuan yang masuk ke menu Approval Requests.'
+                                    : 'Boleh melakukan approval/persetujuan pada modul ini.',
+                                'read' => $isLegacyCorsec
+                                    ? 'Hanya bisa membuka menu Approval Requests untuk melihat daftar & status pengajuan (read-only) - tidak ada tombol Setujui/Tolak. Cocok untuk role maker yang perlu memantau status pengajuannya sendiri.'
+                                    : null,
+                            ];
 
-$hasStageActions = $groupPermissions->contains(
-    fn($permission) => in_array(
-        explode('.', $permission->name)[1] ?? '',
-        ['maker_action', 'checker_action', 'approver_action'],
+                            $hasStageActions = $groupPermissions->contains(
+                                fn($permission) => in_array(
+                                    explode('.', $permission->name)[1] ?? '',
+                                    ['maker_action', 'checker_action', 'approver_action'],
                                     true,
                                 ),
                             );
-=======
-    $groupPermissions = $groupPermissions->filter(
-        fn($permission) => str_ends_with($permission->name, '.authorize'),
-    );
-}
-$groupLabel = $isLegacyCorsec ? 'Approval Requests' : ucwords($group->name);
->>>>>>> b221050f45210fa2b4011fc6874d69ea79756aa8
                         @endphp
                         @if ($groupPermissions->isNotEmpty())
                             <div class="flex items-baseline flex-wrap lg:flex-nowrap gap-2.5 permission-group">
                                 <label class="form-label max-w-56">
                                     {{ $groupLabel }}
                                 </label>
-<<<<<<< HEAD
                                 <div class="flex flex-col gap-1 w-full">
                                     <div class="flex flex-wrap items-baseline w-full gap-2.5">
                                         <label class="switch switch-sm">
@@ -191,33 +182,6 @@ $groupLabel = $isLegacyCorsec ? 'Approval Requests' : ucwords($group->name);
                                             cuma perlu memantau status, dan Authorize untuk approver/checker.
                                         </div>
                                     @endif
-=======
-                                <div class="flex flex-wrap items-baseline w-full gap-2.5">
-                                    <label class="switch switch-sm">
-                                        <input type="checkbox" class="permission-group-select-all" />
-                                        <span class="switch-label text-primary">
-                                            Select All
-                                        </span>
-                                    </label>
-                                    @foreach ($groupPermissions as $permission)
-                                        <label class="switch">
-                                            @if (isset($role))
-                                                <input type="checkbox" value="{{ $permission->id }}" name="permissions[]"
-                                                    {{ $role->hasPermissionTo($permission->name) ? 'checked' : null }} />
-                                            @else
-                                                <input type="checkbox" value="{{ $permission->id }}"
-                                                    name="permissions[]" />
-                                            @endif
-                                            @php
-                                                $permission_name = explode('.', $permission->name);
-                                            @endphp
-
-                                            <span class="switch-label">
-                                                {{ ucwords($permission_name[1]) }}
-                                            </span>
-                                        </label>
-                                    @endforeach
->>>>>>> b221050f45210fa2b4011fc6874d69ea79756aa8
                                 </div>
                             </div>
                         @endif

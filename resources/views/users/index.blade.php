@@ -112,7 +112,7 @@
                     $.ajax(`users/${data}`, {
                         type: 'DELETE'
                     }).then((response) => {
-                        swal.fire('Deleted!', 'User has been deleted.', 'success').then(() => {
+                        swal.fire('Requested!', 'Request to delete user has been sent.', 'success').then(() => {
                             window.location.reload();
                         });
                     }).catch((error) => {
